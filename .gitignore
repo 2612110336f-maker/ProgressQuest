@@ -1,3 +1,5 @@
-#一応gitignoreの説明。コードに関係ないファイルが勝手に混入したりするんだけど、そのゴミをgit commitの候補から除くやつ。
-.DS_Store
-
+#一応gitignoreの説明。コードに関係ないファイルが勝手に混入したりするんだけど、そのゴミをgit commitの候補から除くやつと思っといて。
+.ds_store
+.vscode
+.env
+.env.local
