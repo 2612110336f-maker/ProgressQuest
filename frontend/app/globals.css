@@ -1,26 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fbf6ea;
+  --foreground: #3f3522;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-cinzel);
+  --font-serif-jp: var(--font-noto-serif-jp);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-serif-jp), serif;
+}
+
+.font-display {
+  font-family: var(--font-cinzel), serif;
+}
+
+.bg-parchment {
+  background-color: #fbf6ea;
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(74, 124, 89, 0.12), transparent 45%),
+    radial-gradient(circle at 85% 0%, rgba(180, 140, 60, 0.14), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(74, 124, 89, 0.1), transparent 50%);
+}
+
+.card-fantasy {
+  background: #fffdf7;
+  border: 1px solid #e7d9b8;
+  box-shadow: 0 8px 24px -8px rgba(120, 90, 40, 0.25);
 }
