@@ -22,6 +22,12 @@ export const login = async (email: string, password: string) => {
   return res.data;
 };
 
+export const getMe = async (): Promise<{ id: string; email: string }> => {
+  const token = localStorage.getItem("token");
+  const res = await api.get("/auth/me", { params: { token } });
+  return res.data;
+};
+
 export type Checkpoint = {
   id: string;
   quest_id: string;
