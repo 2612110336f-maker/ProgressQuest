@@ -1,29 +1,74 @@
 import { StatusItem } from "@/lib/questStatus";
 
 const VIEW_WIDTH = 320;
-const VIEW_HEIGHT_PER_NODE = 90;
-const TOP_MARGIN = 50;
-const BOTTOM_MARGIN = 50;
+const VIEW_HEIGHT_PER_NODE = 110;
+const TOP_MARGIN = 60;
+const BOTTOM_MARGIN = 60;
 const LEFT_X = 90;
 const RIGHT_X = 230;
 const CENTER_X = 160;
-const NODE_RADIUS = 24;
+const NODE_RADIUS = 26;
+const PUCK_DEPTH = 7;
+const LABEL_WIDTH = 130;
+const LABEL_HEIGHT = 30;
 
-type GradientStop = { light: string; dark: string };
+type PuckColors = { top: string; base: string; icon: string };
 
-const nodeGradient: Record<StatusItem["status"], GradientStop> = {
-  completed: { light: "#86efac", dark: "#16a34a" },
-  current: { light: "#93c5fd", dark: "#2563eb" },
-  overdue: { light: "#fca5a5", dark: "#dc2626" },
-  future: { light: "#e5e7eb", dark: "#9ca3af" },
+const nodeColor: Record<StatusItem["status"], PuckColors> = {
+  completed: { top: "#58cc02", base: "#46a302", icon: "#ffffff" },
+  current: { top: "#1cb0f6", base: "#1899d6", icon: "#ffffff" },
+  overdue: { top: "#ff4b4b", base: "#ea2b2b", icon: "#ffffff" },
+  future: { top: "#e5e5e5", base: "#afafaf", icon: "#8a8a8a" },
 };
 
 const nodeIcon: Record<StatusItem["status"], string> = {
   completed: "✓",
   current: "⚔",
-  overdue: "⚠",
+  overdue: "!",
   future: "🔒",
 };
+
+// Duolingo's signature lesson-button look: a darker "base" disc peeking out
+// from beneath a slightly-smaller, lighter "top" disc gives a pressed-button
+// 3D feel without any gradients.
+function Puck({
+  x,
+  y,
+  r,
+  colors,
+  icon,
+  iconSize = 18,
+  ringed = false,
+}: {
+  x: number;
+  y: number;
+  r: number;
+  colors: PuckColors;
+  icon: string;
+  iconSize?: number;
+  ringed?: boolean;
+}) {
+  return (
+    <g>
+      <ellipse cx={x} cy={y + r + 4} rx={r * 0.9} ry={r * 0.28} fill="#00000022" />
+      {ringed && (
+        <circle cx={x} cy={y} r={r + 8} fill="none" stroke="#bee9ff" strokeWidth={4} />
+      )}
+      <circle cx={x} cy={y + PUCK_DEPTH} r={r} fill={colors.base} />
+      <circle cx={x} cy={y} r={r} fill={colors.top} stroke="#ffffff" strokeWidth={4} />
+      <text
+        x={x}
+        y={y + iconSize * 0.35}
+        textAnchor="middle"
+        fontSize={iconSize}
+        fontWeight={800}
+        fill={colors.icon}
+      >
+        {icon}
+      </text>
+    </g>
+  );
+}
 
 type Props = {
   items: StatusItem[];
@@ -31,9 +76,10 @@ type Props = {
 
 export default function QuestMap({ items }: Props) {
   const count = items.length;
-  const height = TOP_MARGIN + BOTTOM_MARGIN + VIEW_HEIGHT_PER_NODE * (count + 1);
+  const height =
+    TOP_MARGIN + BOTTOM_MARGIN + PUCK_DEPTH + VIEW_HEIGHT_PER_NODE * (count + 1);
 
-  const startY = height - BOTTOM_MARGIN;
+  const startY = height - BOTTOM_MARGIN - PUCK_DEPTH;
   const goalY = TOP_MARGIN;
   const step = count > 0 ? (startY - goalY) / (count + 1) : 0;
 
@@ -60,144 +106,93 @@ export default function QuestMap({ items }: Props) {
 
   return (
     <svg viewBox={`0 0 ${VIEW_WIDTH} ${height}`} className="w-full" style={{ minHeight: 320 }}>
-      <defs>
-        {Object.entries(nodeGradient).map(([status, { light, dark }]) => (
-          <radialGradient key={status} id={`grad-${status}`} cx="35%" cy="30%" r="70%">
-            <stop offset="0%" stopColor={light} />
-            <stop offset="100%" stopColor={dark} />
-          </radialGradient>
-        ))}
-        <radialGradient id="grad-start" cx="35%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#fde68a" />
-          <stop offset="100%" stopColor="#d97706" />
-        </radialGradient>
-        <radialGradient id="grad-goal" cx="35%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#fef08a" />
-          <stop offset="100%" stopColor="#eab308" />
-        </radialGradient>
-        <radialGradient id="grad-island" cx="50%" cy="40%" r="65%">
-          <stop offset="0%" stopColor="#ecfccb" />
-          <stop offset="100%" stopColor="#d9f99d" />
-        </radialGradient>
-      </defs>
-
-      <ellipse
-        cx={CENTER_X}
-        cy={height / 2}
-        rx={VIEW_WIDTH / 2 - 6}
-        ry={height / 2 - 10}
-        fill="url(#grad-island)"
-        opacity={0.5}
-      />
-
       {points.slice(0, -1).map((p, i) => {
         const next = points[i + 1];
         const cx = p.x;
         const cy = (p.y + next.y) / 2;
         const completed = segmentCompleted(i);
         return (
-          <g key={`segment-${i}`}>
-            <path
-              d={`M ${p.x} ${p.y + 2} Q ${cx} ${cy + 2} ${next.x} ${next.y + 2}`}
-              fill="none"
-              stroke="#00000022"
-              strokeWidth={5}
-              strokeLinecap="round"
-            />
-            <path
-              d={`M ${p.x} ${p.y} Q ${cx} ${cy} ${next.x} ${next.y}`}
-              fill="none"
-              stroke={completed ? "#4ade80" : "#d1d5db"}
-              strokeWidth={4}
-              strokeDasharray={completed ? undefined : "6,4"}
-              strokeLinecap="round"
-            />
-          </g>
+          <path
+            key={`segment-${i}`}
+            d={`M ${p.x} ${p.y} Q ${cx} ${cy} ${next.x} ${next.y}`}
+            fill="none"
+            stroke={completed ? "#58cc02" : "#e5e5e5"}
+            strokeWidth={5}
+            strokeDasharray={completed ? undefined : "2,10"}
+            strokeLinecap="round"
+          />
         );
       })}
 
-      <ellipse
-        cx={CENTER_X}
-        cy={startY + NODE_RADIUS * 0.85}
-        rx={NODE_RADIUS * 1.15}
-        ry={NODE_RADIUS * 0.4}
-        fill="#00000025"
+      <Puck
+        x={CENTER_X}
+        y={startY}
+        r={NODE_RADIUS}
+        colors={{ top: "#ffae00", base: "#e08e00", icon: "#ffffff" }}
+        icon="🏁"
       />
-      <circle cx={CENTER_X} cy={startY} r={NODE_RADIUS} fill="url(#grad-start)" />
-      <text x={CENTER_X} y={startY + 5} textAnchor="middle" fontSize={18}>
-        🏁
-      </text>
-      <text x={CENTER_X} y={startY + NODE_RADIUS + 16} textAnchor="middle" fontSize={12} fill="#92400e">
+      <text
+        x={CENTER_X}
+        y={startY + NODE_RADIUS + PUCK_DEPTH + 20}
+        textAnchor="middle"
+        fontSize={12}
+        fontWeight={700}
+        fill="#92400e"
+      >
         スタート
       </text>
 
       {nodes.map((node) => {
-        const labelX = node.x === LEFT_X ? node.x + NODE_RADIUS + 8 : node.x - NODE_RADIUS - 8;
-        const labelAnchor = node.x === LEFT_X ? "start" : "end";
+        const colors = nodeColor[node.status];
+        const labelOnLeft = node.x === RIGHT_X;
+        const labelX = labelOnLeft
+          ? node.x - NODE_RADIUS - 12 - LABEL_WIDTH
+          : node.x + NODE_RADIUS + 12;
         return (
           <g key={node.checkpoint.id}>
-            <ellipse
-              cx={node.x}
-              cy={node.y + NODE_RADIUS * 0.85}
-              rx={NODE_RADIUS * 1.15}
-              ry={NODE_RADIUS * 0.4}
-              fill="#00000025"
-            />
-            {node.status === "current" && (
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={NODE_RADIUS + 7}
-                fill="none"
-                stroke="#60a5fa"
-                strokeWidth={2}
-                opacity={0.5}
-              />
-            )}
-            <circle
-              cx={node.x}
-              cy={node.y}
+            <Puck
+              x={node.x}
+              y={node.y}
               r={NODE_RADIUS}
-              fill={`url(#grad-${node.status})`}
-              stroke="#ffffff"
-              strokeWidth={2}
+              colors={colors}
+              icon={nodeIcon[node.status]}
+              ringed={node.status === "current"}
             />
-            <ellipse
-              cx={node.x - NODE_RADIUS * 0.35}
-              cy={node.y - NODE_RADIUS * 0.4}
-              rx={NODE_RADIUS * 0.4}
-              ry={NODE_RADIUS * 0.25}
-              fill="#ffffff"
-              opacity={0.35}
-            />
-            <text x={node.x} y={node.y + 6} textAnchor="middle" fontSize={18}>
-              {nodeIcon[node.status]}
-            </text>
-            <text
+            <foreignObject
               x={labelX}
-              y={node.y + 5}
-              textAnchor={labelAnchor}
-              fontSize={12}
-              fill="#475569"
+              y={node.y - LABEL_HEIGHT / 2}
+              width={LABEL_WIDTH}
+              height={LABEL_HEIGHT}
             >
-              {node.checkpoint.title}
-            </text>
+              <div
+                className="bg-white border border-amber-200 rounded-full shadow-sm h-full flex items-center px-3 text-xs font-bold text-slate-700"
+                style={{
+                  justifyContent: labelOnLeft ? "flex-end" : "flex-start",
+                  textAlign: labelOnLeft ? "right" : "left",
+                }}
+              >
+                <span className="truncate">{node.checkpoint.title}</span>
+              </div>
+            </foreignObject>
           </g>
         );
       })}
 
-      <ellipse
-        cx={CENTER_X}
-        cy={goalY + NODE_RADIUS * 0.85}
-        rx={NODE_RADIUS * 1.15}
-        ry={NODE_RADIUS * 0.4}
-        fill="#00000025"
+      <Puck
+        x={CENTER_X}
+        y={goalY}
+        r={NODE_RADIUS}
+        colors={{ top: "#ffc800", base: "#e0a800", icon: "#ffffff" }}
+        icon="🏆"
       />
-      <circle cx={CENTER_X} cy={goalY} r={NODE_RADIUS} fill="url(#grad-goal)" />
-      <text x={CENTER_X} y={goalY + 5} textAnchor="middle" fontSize={18}>
-        🏆
-      </text>
-      <text x={CENTER_X} y={goalY - NODE_RADIUS - 8} textAnchor="middle" fontSize={12} fill="#92400e">
+      <text
+        x={CENTER_X}
+        y={goalY - NODE_RADIUS - 12}
+        textAnchor="middle"
+        fontSize={12}
+        fontWeight={700}
+        fill="#92400e"
+      >
         ゴール
       </text>
     </svg>
