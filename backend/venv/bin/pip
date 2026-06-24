@@ -1,4 +1,4 @@
-#!/Users/tsudaseiya/programing/hack-teamD/backend/venv/bin/python
+#!/Users/fujimurahinata/hack-teamD/backend/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

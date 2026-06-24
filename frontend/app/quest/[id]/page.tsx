@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { getCheckpointStatuses } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
+import Timeline from "@/components/Timeline";
 
 export default function QuestDetailPage() {
   const params = useParams();
@@ -96,73 +97,74 @@ export default function QuestDetailPage() {
 
   return (
     <div className="min-h-screen bg-parchment">
-      <header className="card-fantasy">
+      <header className="card-fantasy border-b border-border bg-card/65 backdrop-blur-md">
         <div className="max-w-md lg:max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/dashboard" className="text-sm text-emerald-700 hover:underline">
+          <Link href="/dashboard" className="text-sm text-primary hover:underline font-display">
             ← ダッシュボードに戻る
           </Link>
           <button
             onClick={handleDeleteQuest}
-            className="text-xs text-red-500 hover:underline"
+            className="text-xs text-danger hover:underline font-display"
           >
-            削除
+            クエストを破棄 ⚔️
           </button>
         </div>
       </header>
 
-      <main className="max-w-md lg:max-w-4xl mx-auto p-4 sm:p-6">
-        <h1 className="font-display text-2xl font-bold text-emerald-900">{quest.title}</h1>
-        {quest.description && (
-          <p className="text-slate-500 text-sm italic mt-1">「{quest.description}」</p>
-        )}
-        {quest.final_deadline && (
-          <p className="text-xs text-amber-700 mt-2 mb-4">期日: {quest.final_deadline}</p>
-        )}
+      <main className="max-w-md lg:max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-slate-100">{quest.title}</h1>
+          {quest.description && (
+            <p className="text-slate-400 text-sm italic mt-1">「{quest.description}」</p>
+          )}
+          {quest.final_deadline && (
+            <p className="text-xs text-warning mt-2 font-display">最終期日: {quest.final_deadline}</p>
+          )}
+        </div>
 
         <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
-          <div className="card-fantasy rounded-2xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm overflow-x-auto">
+          {/* 左カラム：クエストビジュアルマップ */}
+          <div className="card-fantasy rounded-2xl p-4 bg-card/40 border border-border overflow-x-auto max-w-xs mx-auto lg:max-w-sm">
+            <h3 className="font-display font-bold text-xs text-primary mb-3 uppercase tracking-widest">
+              Quest Map (探索地図)
+            </h3>
             <QuestMap items={items} />
           </div>
 
-          <div>
-            {items.length === 0 && (
-              <p className="text-slate-400 text-sm text-center my-6">
-                まだチェックポイントがありません。
-              </p>
-            )}
-
+          {/* 右カラム：現在地とタイムライン */}
+          <div className="space-y-6">
             {current && (
               <div
-                className={`rounded-xl p-4 mt-4 lg:mt-0 border ${
+                className={`rounded-xl p-4 border transition-all duration-300 ${
                   current.status === "overdue"
-                    ? "bg-red-50 border-red-200"
-                    : "bg-blue-50 border-blue-200"
+                    ? "bg-danger/10 border-danger text-slate-200"
+                    : "bg-primary/10 border-primary text-slate-200"
                 }`}
               >
-                <span className="inline-block text-[10px] font-bold tracking-widest uppercase bg-amber-200 text-amber-900 rounded-full px-2 py-0.5 mb-2">
-                  {current.status === "overdue" ? "Overdue" : "Current Quest"}
+                <span className="inline-block text-[10px] font-bold tracking-widest uppercase bg-secondary/20 text-secondary border border-secondary/30 rounded-full px-2.5 py-0.5 mb-2 font-display">
+                  {current.status === "overdue" ? "Overdue" : "Current Active Quest"}
                 </span>
                 <p
                   className={`text-xs font-bold mb-1 ${
-                    current.status === "overdue" ? "text-red-500" : "text-blue-500"
+                    current.status === "overdue" ? "text-danger" : "text-primary"
                   }`}
                 >
-                  {current.status === "overdue" ? "⚠️ 危険：期日超過" : "⚔️ 現在地"}
+                  {current.status === "overdue" ? "⚠️ 警告：期日超過" : "⚔️ 現在進行中"}
                 </p>
-                <p className="font-display font-bold text-lg text-slate-800">
+                <p className="font-display font-bold text-lg text-slate-100">
                   {current.checkpoint.title}
                 </p>
                 {current.checkpoint.description && (
-                  <p className="text-sm text-slate-600 mt-1">{current.checkpoint.description}</p>
+                  <p className="text-xs text-slate-400 mt-1">{current.checkpoint.description}</p>
                 )}
                 {current.checkpoint.due_date && (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-400 mt-1 font-display">
                     期日: {current.checkpoint.due_date}
                   </p>
                 )}
                 <button
                   onClick={() => handleToggleComplete(current.checkpoint)}
-                  className="mt-3 w-full bg-emerald-700 text-white py-2 rounded-lg hover:bg-emerald-600 transition font-bold shadow-md"
+                  className="mt-3 w-full bg-success text-white py-2 rounded-lg hover:bg-opacity-90 transition font-bold font-display shadow-md text-sm"
                 >
                   ✅ このチェックポイントをクリア！
                 </button>
@@ -170,13 +172,14 @@ export default function QuestDetailPage() {
             )}
 
             {allCompleted && (
-              <div className="rounded-xl p-4 mt-4 lg:mt-0 bg-emerald-50 border border-emerald-200 text-center">
-                <p className="text-emerald-700 font-bold text-lg">🏆 クエストクリア！</p>
+              <div className="rounded-xl p-4 bg-success/20 border border-success text-center">
+                <p className="text-success font-bold text-lg font-display">🏆 クエストクリア！</p>
               </div>
             )}
 
-            <div className="card-fantasy rounded-lg p-4 mt-6">
-              <h3 className="font-bold mb-3 text-xs text-amber-700 tracking-widest uppercase">
+            {/* チェックポイント追加 */}
+            <div className="card-fantasy rounded-xl p-4 bg-card/40 border border-border">
+              <h3 className="font-bold mb-3 text-xs text-slate-350 tracking-widest uppercase font-display">
                 チェックポイントを追加
               </h3>
               <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
@@ -185,54 +188,40 @@ export default function QuestDetailPage() {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="タイトル"
-                  className="flex-1 border border-amber-200 rounded-lg px-3 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  className="flex-1 border border-border rounded-lg px-3 py-2 bg-slate-900/60 text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                 />
                 <input
                   type="date"
                   value={newDueDate}
                   onChange={(e) => setNewDueDate(e.target.value)}
-                  className="border border-amber-200 rounded-lg px-3 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  className="border border-border rounded-lg px-3 py-2 bg-slate-900/60 text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                 />
                 <button
                   onClick={handleAddCheckpoint}
-                  className="bg-amber-400 text-amber-950 px-4 py-2 rounded-lg hover:bg-amber-300 transition font-bold text-sm shadow-md"
+                  className="bg-primary hover:bg-opacity-90 text-white px-4 py-2 rounded-lg transition font-bold text-sm font-display shadow-md"
                 >
                   追加
                 </button>
               </div>
             </div>
 
-            {items.length > 0 && (
-              <div className="mt-6">
-                <h3 className="font-bold mb-2 text-xs text-amber-700 tracking-widest uppercase">
-                  チェックポイント一覧
-                </h3>
-                <div className="space-y-2">
-                  {items.map(({ checkpoint }) => (
-                    <div
-                      key={checkpoint.id}
-                      className="flex items-center justify-between card-fantasy rounded-lg px-3 py-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={!!checkpoint.completed_at}
-                          onChange={() => handleToggleComplete(checkpoint)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-slate-700">{checkpoint.title}</span>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteCheckpoint(checkpoint.id)}
-                        className="text-xs text-slate-400 hover:text-red-500"
-                      >
-                        削除
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* タイムライン表示 */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-xs text-slate-400 tracking-widest uppercase font-display">
+                ロードマップ進捗
+              </h3>
+              {items.length === 0 ? (
+                <p className="text-slate-500 text-sm text-center my-6">
+                  まだチェックポイントがありません。
+                </p>
+              ) : (
+                <Timeline
+                  checkpoints={quest.checkpoints}
+                  onToggleComplete={handleToggleComplete}
+                  onDelete={handleDeleteCheckpoint}
+                />
+              )}
+            </div>
           </div>
         </div>
       </main>

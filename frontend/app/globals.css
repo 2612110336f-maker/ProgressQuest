@@ -1,37 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbf6ea;
-  --foreground: #3f3522;
+  --background: #0F172A;
+  --foreground: #F8FAFC;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-display: var(--font-cinzel);
-  --font-serif-jp: var(--font-noto-serif-jp);
+  --color-card: #1E293B;
+  --color-border: #334155;
+  
+  --color-primary: #6C63FF;
+  --color-secondary: #8B5CF6;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+
+  --font-display: var(--font-nico-kaku);
+  --font-sans: var(--font-noto-sans-jp);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-noto-serif-jp), serif;
+  font-family: var(--font-noto-sans-jp), sans-serif;
 }
 
 .font-display {
-  font-family: var(--font-cinzel), serif;
+  font-family: var(--font-nico-kaku), sans-serif;
 }
 
+/* 既存クラスのダークテーマ適応（互換性担保） */
 .bg-parchment {
-  background-color: #fbf6ea;
+  background-color: #0F172A;
   background-image:
-    radial-gradient(circle at 15% 10%, rgba(74, 124, 89, 0.12), transparent 45%),
-    radial-gradient(circle at 85% 0%, rgba(180, 140, 60, 0.14), transparent 45%),
-    radial-gradient(circle at 50% 100%, rgba(74, 124, 89, 0.1), transparent 50%);
+    radial-gradient(circle at 15% 10%, rgba(108, 99, 255, 0.12), transparent 45%),
+    radial-gradient(circle at 85% 0%, rgba(139, 92, 246, 0.14), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(34, 197, 94, 0.08), transparent 50%);
 }
 
 .card-fantasy {
-  background: #fffdf7;
-  border: 1px solid #e7d9b8;
-  box-shadow: 0 8px 24px -8px rgba(120, 90, 40, 0.25);
+  background: #1E293B;
+  border: 1px solid #334155;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
 }

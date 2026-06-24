@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Cinzel, Noto_Serif_JP } from "next/font/google";
+import { Noto_Sans_JP } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const cinzel = Cinzel({
-  variable: "--font-cinzel",
-  subsets: ["latin"],
+const nicoKaku = localFont({
+  src: "../public/fonts/nicokaku_v2-5.ttf",
+  variable: "--font-nico-kaku",
+  display: "swap",
 });
 
-const notoSerifJP = Noto_Serif_JP({
-  variable: "--font-noto-serif-jp",
-  weight: ["400", "600", "700", "900"],
+const notoSansJP = Noto_Sans_JP({
+  variable: "--font-noto-sans-jp",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,9 +28,11 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${cinzel.variable} ${notoSerifJP.variable} h-full antialiased`}
+      className={`${nicoKaku.variable} ${notoSansJP.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#0F172A] text-[#F8FAFC]">
+        {children}
+      </body>
     </html>
   );
 }

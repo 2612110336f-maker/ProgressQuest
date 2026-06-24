@@ -118,4 +118,57 @@ export const deleteCheckpoint = async (id: string) => {
   return res.data;
 };
 
+export type AIQuestion = {
+  id: string;
+  text: string;
+  options: string[];
+};
+
+export type AIDiagnoseResponse = {
+  questions: AIQuestion[];
+};
+
+export type AIProposeDeadlineResponse = {
+  proposed_deadline: string;
+  reason: string;
+  diagnosis_summary: string;
+};
+
+export type AICheckpointProposal = {
+  title: string;
+  description: string;
+  due_date: string;
+  order_index: number;
+};
+
+export type AIGenerateRoadmapResponse = {
+  checkpoints: AICheckpointProposal[];
+};
+
+export const diagnose = async (
+  goal: string,
+  desired_deadline: string
+): Promise<AIDiagnoseResponse> => {
+  const res = await api.post("/ai/diagnose", { goal, desired_deadline });
+  return res.data;
+};
+
+export const proposeDeadline = async (
+  goal: string,
+  desired_deadline: string,
+  answers: { question_id: string; answer: string }[]
+): Promise<AIProposeDeadlineResponse> => {
+  const res = await api.post("/ai/propose-deadline", { goal, desired_deadline, answers });
+  return res.data;
+};
+
+export const generateRoadmap = async (
+  goal: string,
+  final_deadline: string,
+  diagnosis_summary: string
+): Promise<AIGenerateRoadmapResponse> => {
+  const res = await api.post("/ai/generate-roadmap", { goal, final_deadline, diagnosis_summary });
+  return res.data;
+};
+
 export default api;
