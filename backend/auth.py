@@ -1,9 +1,14 @@
 from datetime import datetime, timedelta
 from typing import Optional
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 import os
+from database import get_db
+import models
 
 load_dotenv()
 
@@ -33,3 +38,14 @@ def decode_token(token: str):
         return payload.get("sub")
     except JWTError:
         return None
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> models.User:
+    user_id = decode_token(token)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="無効なトークンです")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="ユーザーが見つかりません")
+    return user

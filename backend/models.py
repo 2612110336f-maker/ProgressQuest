@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Text, Date, DateTime, Integer, ForeignKey
 from sqlalchemy.dialects.sqlite import JSON
+from sqlalchemy.orm import relationship
 from database import Base
 import uuid
 from datetime import datetime
@@ -28,6 +29,10 @@ class Quest(Base):
     diagnosis_result = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
 
+    checkpoints = relationship(
+        "Checkpoint", back_populates="quest", cascade="all, delete-orphan"
+    )
+
 class Checkpoint(Base):
     __tablename__ = "checkpoints"
 
@@ -38,3 +43,5 @@ class Checkpoint(Base):
     due_date = Column(Date, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     order_index = Column(Integer, nullable=True)
+
+    quest = relationship("Quest", back_populates="checkpoints")
