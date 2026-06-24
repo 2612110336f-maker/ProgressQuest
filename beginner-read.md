@@ -34,7 +34,6 @@ cd backend
 python3 -m venv venv
 
 # 仮想環境を有効化
-source venv/bin/activate
 ```
 
 > ✅ ターミナルの先頭に `(venv)` と表示されれば成功です
