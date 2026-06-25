@@ -128,7 +128,7 @@ export default function QuestDetailPage() {
       <main className="max-w-md lg:max-w-4xl mx-auto p-4 sm:p-6">
         <h1 className="font-display text-2xl font-bold text-[#2C2C2C]">{quest.title}</h1>
         {quest.description && (
-          <p className="text-[#888888] text-sm italic mt-1">「{quest.description}」</p>
+          <p className="text-[#5a5a5a] text-sm italic mt-1">「{quest.description}」</p>
         )}
         {quest.final_deadline && (
           <p className="text-xs text-[#2D6A4F] mt-2 mb-4">期日: {quest.final_deadline}</p>
@@ -189,7 +189,7 @@ export default function QuestDetailPage() {
                   {current.checkpoint.title}
                 </p>
                 {current.checkpoint.description && (
-                  <p className="text-sm text-[#888888] mt-1">{current.checkpoint.description}</p>
+                  <p className="text-sm text-[#5a5a5a] mt-1">{current.checkpoint.description}</p>
                 )}
                 {current.checkpoint.due_date && (
                   <p className="text-xs text-[#888888] mt-1">
@@ -272,7 +272,7 @@ export default function QuestDetailPage() {
                         <div>
                           <span className="text-sm text-[#2C2C2C]">{checkpoint.title}</span>
                           {checkpoint.description && (
-                            <p className="text-xs text-[#888888] mt-0.5">
+                            <p className="text-xs text-[#5a5a5a] mt-0.5">
                               {checkpoint.description}
                             </p>
                           )}
@@ -304,7 +304,7 @@ export default function QuestDetailPage() {
             <p className="font-display text-2xl font-bold text-[#2C2C2C] mb-1">
               クエストクリア！
             </p>
-            <p className="text-sm text-[#888888] mb-4">
+            <p className="text-sm text-[#5a5a5a] mb-4">
               「{quest.title}」を達成しました。伝説の冒険者の称号を獲得！
             </p>
             <div className="bg-[#F5F0E8] rounded-xl p-3 mb-6 text-sm text-[#2C2C2C] shadow-neumorphism-inset">

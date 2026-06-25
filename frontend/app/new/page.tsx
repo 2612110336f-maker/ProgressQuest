@@ -11,6 +11,7 @@ import {
   generateRoadmap,
   proposeDeadline,
 } from "@/lib/api";
+import QuestLoading from "@/components/QuestLoading";
 
 type Step =
   | "choose"
@@ -211,7 +212,7 @@ export default function NewQuestPage() {
               className="w-full text-left bg-[#F5F0E8] rounded-xl p-4 shadow-neumorphism-sm hover:opacity-90 transition"
             >
               <p className="font-display font-bold text-[#2D6A4F]">🤖 AIで作る</p>
-              <p className="text-xs text-[#888888] mt-1">
+              <p className="text-xs text-[#5a5a5a] mt-1">
                 目標を伝えるとAIが診断し、期日とロードマップを自動生成します
               </p>
             </button>
@@ -220,7 +221,7 @@ export default function NewQuestPage() {
               className="w-full text-left bg-[#F5F0E8] rounded-xl p-4 shadow-neumorphism-sm hover:opacity-90 transition"
             >
               <p className="font-display font-bold text-[#2D6A4F]">✍️ 手動で作る</p>
-              <p className="text-xs text-[#888888] mt-1">
+              <p className="text-xs text-[#5a5a5a] mt-1">
                 タイトル・説明・期日を自分で入力してすぐに作成します
               </p>
             </button>
@@ -320,18 +321,20 @@ export default function NewQuestPage() {
           </>
         )}
 
-        {(step === "loading-diagnose" ||
-          step === "loading-propose" ||
-          step === "loading-roadmap" ||
-          step === "creating") && (
-          <div className="text-center py-10">
-            <p className="text-[#2D6A4F] font-display font-bold animate-pulse">
-              {step === "loading-diagnose" && "AIが診断質問を考えています..."}
-              {step === "loading-propose" && "AIが現実的な期日を考えています..."}
-              {step === "loading-roadmap" && "AIがロードマップを作成しています..."}
-              {step === "creating" && "クエストを作成しています..."}
-            </p>
-          </div>
+        {step === "loading-diagnose" && (
+          <QuestLoading label="AIが診断質問を考えています..." expectedSeconds={10} />
+        )}
+        {step === "loading-propose" && (
+          <QuestLoading label="AIが現実的な期日を考えています..." expectedSeconds={10} />
+        )}
+        {step === "loading-roadmap" && (
+          <QuestLoading label="AIがロードマップを作成しています..." expectedSeconds={12} />
+        )}
+        {step === "creating" && (
+          <QuestLoading
+            label="クエストを作成しています..."
+            expectedSeconds={Math.max(4, checkpoints.length + 2)}
+          />
         )}
 
         {step === "questions" && questions.length > 0 && (
@@ -458,7 +461,7 @@ export default function NewQuestPage() {
                   <p className="font-bold text-sm text-[#2C2C2C]">
                     {cp.order_index}. {cp.title}
                   </p>
-                  <p className="text-xs text-[#888888] mt-0.5">{cp.description}</p>
+                  <p className="text-xs text-[#5a5a5a] mt-0.5">{cp.description}</p>
                   <p className="text-xs text-[#2D6A4F] mt-1">期日: {cp.due_date}</p>
                 </div>
               ))}

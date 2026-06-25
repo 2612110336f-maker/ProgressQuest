@@ -63,7 +63,7 @@ export default function TrashPage() {
               <div>
                 <p className="font-bold text-[#2C2C2C]">{q.title}</p>
                 {q.description && (
-                  <p className="text-xs text-[#888888] mt-0.5 italic">「{q.description}」</p>
+                  <p className="text-xs text-[#5a5a5a] mt-0.5 italic">「{q.description}」</p>
                 )}
               </div>
               <div className="flex gap-2 shrink-0">

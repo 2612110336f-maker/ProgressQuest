@@ -106,7 +106,18 @@ export default function DashboardPage() {
       </header>
 
       <main className="max-w-2xl lg:max-w-5xl mx-auto p-4 sm:p-8">
-        <p className="text-sm text-[#888888] mb-4">{email}</p>
+        <div className="flex justify-between items-center mb-4 gap-2">
+          <p className="text-sm text-[#888888]">{email}</p>
+          {questDetails.length > 0 && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1 h-9 px-3 text-xs rounded-xl bg-[#F5F0E8] text-[#2D6A4F] font-bold hover:opacity-90 transition shrink-0 shadow-neumorphism-sm"
+            >
+              <span className="truncate max-w-[10rem]">📜 {activeQuest?.title ?? "クエストを選ぶ"}</span>
+              <span aria-hidden>▾</span>
+            </button>
+          )}
+        </div>
 
         {questDetails.length === 0 && (
           <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-8 text-center">
@@ -122,19 +133,11 @@ export default function DashboardPage() {
 
         {activeQuest && (
           <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-5">
-            <div className="flex justify-between items-start mb-1 gap-2">
-              <h2 className="font-display text-xl font-bold text-[#2C2C2C]">
-                {activeQuest.title}
-              </h2>
-              <button
-                onClick={() => setShowModal(true)}
-                className="h-9 px-3 text-xs rounded-xl bg-[#E9A62A] text-white font-bold hover:opacity-90 transition shrink-0 shadow-neumorphism-sm"
-              >
-                クエストを切り替える
-              </button>
-            </div>
+            <h2 className="font-display text-xl font-bold text-[#2C2C2C] mb-1">
+              {activeQuest.title}
+            </h2>
             {activeQuest.description && (
-              <p className="text-xs text-[#888888] italic mb-3">「{activeQuest.description}」</p>
+              <p className="text-xs text-[#5a5a5a] italic mb-3">「{activeQuest.description}」</p>
             )}
 
             <div className="lg:grid lg:grid-cols-2 lg:gap-6">
