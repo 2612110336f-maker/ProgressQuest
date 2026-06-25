@@ -60,15 +60,21 @@ def diagnose(
     req: schemas.DiagnoseRequest,
     user: models.User = Depends(get_current_user),
 ):
+    context_line = f"補足情報: {req.context}\n" if req.context else ""
     prompt = f"""あなたは学習・目標達成のコーチです。
-以下の目標と希望期日を持つユーザーの「現在地」を診断するための質問を5問作成してください。
+以下の目標と希望期日を持つユーザーの「現在地」を診断するための質問を作成してください。
 
 今日の日付: {date.today()}
 目標: {req.goal}
 希望期日: {req.desired_deadline}
-
-各質問にはid（q1, q2, ...）、text（質問文）、options（3〜4個の選択肢の配列）を含めてください。"""
-    return call_gemini(prompt, schemas.DiagnoseResponse)
+{context_line}
+質問数は目標の複雑さに応じて決めてください。シンプルな目標なら3〜4問、複雑で
+専門性の高い目標なら最大10問まで増やして構いません（10問を超えないこと）。
+各質問にはid（q1, q2, ...）、text（質問文）、options（3〜4個の選択肢の配列）を含めてください。
+補足情報があれば、それを踏まえて質問の精度を上げてください。"""
+    result = call_gemini(prompt, schemas.DiagnoseResponse)
+    result.questions = result.questions[:10]
+    return result
 
 
 @router.post("/propose-deadline", response_model=schemas.ProposeDeadlineResponse)

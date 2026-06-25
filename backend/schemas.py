@@ -64,6 +64,7 @@ class QuestOut(BaseModel):
     final_deadline: Optional[date] = None
     diagnosis_result: Optional[Any] = None
     created_at: datetime
+    archived_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -74,6 +75,7 @@ class QuestDetailOut(QuestOut):
 class DiagnoseRequest(BaseModel):
     goal: str
     desired_deadline: date
+    context: Optional[str] = None
 
 class DiagnoseQuestion(BaseModel):
     id: str

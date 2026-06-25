@@ -142,9 +142,10 @@ export type DiagnoseQuestion = {
 
 export const diagnose = async (
   goal: string,
-  desired_deadline: string
+  desired_deadline: string,
+  context?: string
 ): Promise<{ questions: DiagnoseQuestion[] }> => {
-  const res = await api.post("/ai/diagnose", { goal, desired_deadline });
+  const res = await api.post("/ai/diagnose", { goal, desired_deadline, context });
   return res.data;
 };
 

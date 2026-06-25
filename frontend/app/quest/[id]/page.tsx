@@ -14,6 +14,8 @@ import {
 import { getCheckpointStatuses } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
 
+type Tab = "map" | "list";
+
 export default function QuestDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -22,6 +24,7 @@ export default function QuestDetailPage() {
   const [quest, setQuest] = useState<QuestDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tab, setTab] = useState<Tab>("map");
 
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -68,7 +71,8 @@ export default function QuestDetailPage() {
     await updateCheckpoint(checkpoint.id, { completed: !checkpoint.completed_at });
     const data = await getQuest(questId);
     setQuest(data);
-    const isAllCompletedNow = data.checkpoints.length > 0 && data.checkpoints.every((cp) => cp.completed_at);
+    const isAllCompletedNow =
+      data.checkpoints.length > 0 && data.checkpoints.every((cp) => cp.completed_at);
     if (isAllCompletedNow && !wasAllCompleted) {
       setShowCelebration(true);
     }
@@ -87,7 +91,7 @@ export default function QuestDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-parchment flex items-center justify-center text-amber-800 font-display">
+      <div className="min-h-screen bg-parchment flex items-center justify-center text-[#2D6A4F] font-display">
         読み込み中...
       </div>
     );
@@ -95,7 +99,7 @@ export default function QuestDetailPage() {
 
   if (error || !quest) {
     return (
-      <div className="min-h-screen bg-parchment flex items-center justify-center text-red-500">
+      <div className="min-h-screen bg-parchment flex items-center justify-center text-[#E05252]">
         {error || "クエストが見つかりません"}
       </div>
     );
@@ -107,14 +111,14 @@ export default function QuestDetailPage() {
 
   return (
     <div className="min-h-screen bg-parchment">
-      <header className="card-fantasy">
-        <div className="max-w-md lg:max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/dashboard" className="text-sm text-emerald-700 hover:underline">
+      <header className="bg-[#2D6A4F] h-16 flex items-center">
+        <div className="w-full max-w-md lg:max-w-4xl mx-auto px-4 flex justify-between items-center">
+          <Link href="/dashboard" className="text-sm text-white/80 hover:text-white transition">
             ← ダッシュボードに戻る
           </Link>
           <button
             onClick={handleTrashQuest}
-            className="text-xs text-red-500 hover:underline"
+            className="text-sm text-white/80 hover:text-white transition"
           >
             🗑️ ゴミ箱に入れる
           </button>
@@ -122,58 +126,79 @@ export default function QuestDetailPage() {
       </header>
 
       <main className="max-w-md lg:max-w-4xl mx-auto p-4 sm:p-6">
-        <h1 className="font-display text-2xl font-bold text-emerald-900">{quest.title}</h1>
+        <h1 className="font-display text-2xl font-bold text-[#2C2C2C]">{quest.title}</h1>
         {quest.description && (
-          <p className="text-slate-500 text-sm italic mt-1">「{quest.description}」</p>
+          <p className="text-[#888888] text-sm italic mt-1">「{quest.description}」</p>
         )}
         {quest.final_deadline && (
-          <p className="text-xs text-amber-700 mt-2 mb-4">期日: {quest.final_deadline}</p>
+          <p className="text-xs text-[#2D6A4F] mt-2 mb-4">期日: {quest.final_deadline}</p>
         )}
 
-        <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
-          <div className="card-fantasy rounded-2xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm overflow-x-auto">
-            <QuestMap items={items} />
-          </div>
+        <div className="flex border-b border-[#E8E0D0] mb-6">
+          <button
+            onClick={() => setTab("map")}
+            className={`flex-1 py-3 text-sm font-bold transition ${
+              tab === "map"
+                ? "border-b-2 border-[#2D6A4F] text-[#2D6A4F]"
+                : "text-gray-400"
+            }`}
+          >
+            🗺️ マップ
+          </button>
+          <button
+            onClick={() => setTab("list")}
+            className={`flex-1 py-3 text-sm font-bold transition ${
+              tab === "list"
+                ? "border-b-2 border-[#2D6A4F] text-[#2D6A4F]"
+                : "text-gray-400"
+            }`}
+          >
+            📋 一覧
+          </button>
+        </div>
 
+        {tab === "map" && (
           <div>
+            <div className="bg-[#EEF5EE] rounded-2xl p-2 max-w-xs mx-auto overflow-x-auto">
+              <QuestMap items={items} />
+            </div>
+
             {items.length === 0 && (
-              <p className="text-slate-400 text-sm text-center my-6">
-                まだチェックポイントがありません。
+              <p className="text-[#888888] text-sm text-center my-6">
+                まだチェックポイントがありません。「一覧」タブから追加してください。
               </p>
             )}
 
             {current && (
               <div
-                className={`rounded-xl p-4 mt-4 lg:mt-0 border ${
-                  current.status === "overdue"
-                    ? "bg-red-50 border-red-200"
-                    : "bg-blue-50 border-blue-200"
+                className={`rounded-xl p-4 mt-4 ${
+                  current.status === "overdue" ? "bg-[#E05252]/10" : "bg-[#2D6A4F]/10"
                 }`}
               >
-                <span className="inline-block text-[10px] font-bold tracking-widest uppercase bg-amber-200 text-amber-900 rounded-full px-2 py-0.5 mb-2">
+                <span className="inline-block text-[10px] font-bold tracking-widest uppercase bg-[#E9A62A] text-white rounded-full px-2 py-0.5 mb-2">
                   {current.status === "overdue" ? "Overdue" : "Current Quest"}
                 </span>
                 <p
                   className={`text-xs font-bold mb-1 ${
-                    current.status === "overdue" ? "text-red-500" : "text-blue-500"
+                    current.status === "overdue" ? "text-[#E05252]" : "text-[#2D6A4F]"
                   }`}
                 >
                   {current.status === "overdue" ? "⚠️ 危険：期日超過" : "⚔️ 現在地"}
                 </p>
-                <p className="font-display font-bold text-lg text-slate-800">
+                <p className="font-display font-bold text-lg text-[#2C2C2C]">
                   {current.checkpoint.title}
                 </p>
                 {current.checkpoint.description && (
-                  <p className="text-sm text-slate-600 mt-1">{current.checkpoint.description}</p>
+                  <p className="text-sm text-[#888888] mt-1">{current.checkpoint.description}</p>
                 )}
                 {current.checkpoint.due_date && (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-[#888888] mt-1">
                     期日: {current.checkpoint.due_date}
                   </p>
                 )}
                 <button
                   onClick={() => handleToggleComplete(current.checkpoint)}
-                  className="mt-3 w-full bg-emerald-700 text-white py-2 rounded-lg hover:bg-emerald-600 transition font-bold shadow-md"
+                  className="flex items-center justify-center h-12 w-full mt-3 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
                 >
                   ✅ このチェックポイントをクリア！
                 </button>
@@ -181,13 +206,17 @@ export default function QuestDetailPage() {
             )}
 
             {allCompleted && (
-              <div className="rounded-xl p-4 mt-4 lg:mt-0 bg-emerald-50 border border-emerald-200 text-center">
-                <p className="text-emerald-700 font-bold text-lg">🏆 クエストクリア！</p>
+              <div className="rounded-xl p-4 mt-4 bg-[#4CAF50]/10 text-center">
+                <p className="text-[#4CAF50] font-bold text-lg">🏆 クエストクリア！</p>
               </div>
             )}
+          </div>
+        )}
 
-            <div className="card-fantasy rounded-lg p-4 mt-6">
-              <h3 className="font-bold mb-3 text-xs text-amber-700 tracking-widest uppercase">
+        {tab === "list" && (
+          <div>
+            <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-4">
+              <h3 className="font-bold mb-3 text-xs text-[#2D6A4F] tracking-widest uppercase">
                 チェックポイントを追加
               </h3>
               <div className="flex flex-col gap-2">
@@ -196,25 +225,25 @@ export default function QuestDetailPage() {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="タイトル"
-                  className="border border-amber-200 rounded-lg px-3 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  className="h-12 rounded-xl px-3 bg-[#F5F0E8] shadow-neumorphism-inset focus:outline-none text-sm"
                 />
                 <textarea
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   placeholder="詳細（任意）"
                   rows={2}
-                  className="border border-amber-200 rounded-lg px-3 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  className="rounded-xl px-3 py-2 bg-[#F5F0E8] shadow-neumorphism-inset focus:outline-none text-sm"
                 />
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="date"
                     value={newDueDate}
                     onChange={(e) => setNewDueDate(e.target.value)}
-                    className="flex-1 border border-amber-200 rounded-lg px-3 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                    className="flex-1 h-12 rounded-xl px-3 bg-[#F5F0E8] shadow-neumorphism-inset focus:outline-none text-sm"
                   />
                   <button
                     onClick={handleAddCheckpoint}
-                    className="bg-amber-400 text-amber-950 px-4 py-2 rounded-lg hover:bg-amber-300 transition font-bold text-sm shadow-md"
+                    className="h-12 px-4 rounded-xl bg-[#E9A62A] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm text-sm"
                   >
                     追加
                   </button>
@@ -222,16 +251,16 @@ export default function QuestDetailPage() {
               </div>
             </div>
 
-            {items.length > 0 && (
+            {items.length > 0 ? (
               <div className="mt-6">
-                <h3 className="font-bold mb-2 text-xs text-amber-700 tracking-widest uppercase">
+                <h3 className="font-bold mb-2 text-xs text-[#2D6A4F] tracking-widest uppercase">
                   チェックポイント一覧
                 </h3>
                 <div className="space-y-2">
                   {items.map(({ checkpoint }) => (
                     <div
                       key={checkpoint.id}
-                      className="flex items-start justify-between card-fantasy rounded-lg px-3 py-2"
+                      className="flex items-start justify-between bg-[#F5F0E8] shadow-neumorphism-sm rounded-xl px-3 py-2"
                     >
                       <div className="flex items-start gap-2">
                         <input
@@ -241,9 +270,9 @@ export default function QuestDetailPage() {
                           className="w-4 h-4 mt-0.5"
                         />
                         <div>
-                          <span className="text-sm text-slate-700">{checkpoint.title}</span>
+                          <span className="text-sm text-[#2C2C2C]">{checkpoint.title}</span>
                           {checkpoint.description && (
-                            <p className="text-xs text-slate-500 mt-0.5">
+                            <p className="text-xs text-[#888888] mt-0.5">
                               {checkpoint.description}
                             </p>
                           )}
@@ -251,7 +280,7 @@ export default function QuestDetailPage() {
                       </div>
                       <button
                         onClick={() => handleDeleteCheckpoint(checkpoint.id)}
-                        className="text-xs text-slate-400 hover:text-red-500 shrink-0"
+                        className="text-xs text-[#E05252] hover:opacity-70 shrink-0"
                       >
                         削除
                       </button>
@@ -259,22 +288,26 @@ export default function QuestDetailPage() {
                   ))}
                 </div>
               </div>
+            ) : (
+              <p className="text-[#888888] text-sm text-center my-6">
+                まだチェックポイントがありません。
+              </p>
             )}
           </div>
-        </div>
+        )}
       </main>
 
       {showCelebration && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="card-fantasy rounded-2xl p-8 w-full max-w-sm text-center">
+          <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-8 w-full max-w-sm text-center">
             <p className="text-5xl mb-3">🏆</p>
-            <p className="font-display text-2xl font-bold text-emerald-900 mb-1">
+            <p className="font-display text-2xl font-bold text-[#2C2C2C] mb-1">
               クエストクリア！
             </p>
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-[#888888] mb-4">
               「{quest.title}」を達成しました。伝説の冒険者の称号を獲得！
             </p>
-            <div className="bg-amber-50/60 border border-amber-200 rounded-lg p-3 mb-6 text-sm text-slate-700">
+            <div className="bg-[#F5F0E8] rounded-xl p-3 mb-6 text-sm text-[#2C2C2C] shadow-neumorphism-inset">
               <p>クリアしたチェックポイント: {quest.checkpoints.length}個</p>
               <p>
                 かかった日数:{" "}
@@ -288,16 +321,16 @@ export default function QuestDetailPage() {
               </p>
             </div>
             <button
-              onClick={handleTrashQuest}
-              className="w-full bg-amber-400 text-amber-950 font-bold py-2 rounded-lg hover:bg-amber-300 transition shadow-md mb-2"
+              onClick={() => setShowCelebration(false)}
+              className="flex items-center justify-center h-12 w-full rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm mb-2"
             >
-              🗑️ ゴミ箱に入れる
+              ✅ このまま残す
             </button>
             <button
-              onClick={() => setShowCelebration(false)}
-              className="w-full text-center text-sm text-slate-400 hover:text-slate-600"
+              onClick={handleTrashQuest}
+              className="flex items-center justify-center h-12 w-full rounded-xl bg-[#E9A62A] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
             >
-              閉じる
+              🗑️ ゴミ箱に入れる
             </button>
           </div>
         </div>

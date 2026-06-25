@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   DiagnoseQuestion,
   RoadmapCheckpoint,
@@ -23,6 +24,11 @@ type Step =
   | "roadmap"
   | "creating";
 
+const inputClass = "w-full h-12 rounded-xl px-4 bg-[#F5F0E8] shadow-neumorphism-inset focus:outline-none";
+const labelClass = "block text-xs font-bold text-[#2D6A4F] tracking-widest uppercase mb-1";
+const primaryButtonClass =
+  "flex items-center justify-center h-12 w-full rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm";
+
 export default function NewQuestPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("choose");
@@ -37,10 +43,12 @@ export default function NewQuestPage() {
   // Step 1: goal + desired deadline
   const [goal, setGoal] = useState("");
   const [desiredDeadline, setDesiredDeadline] = useState("");
+  const [context, setContext] = useState("");
 
   // Step 2: diagnose questions + answers
   const [questions, setQuestions] = useState<DiagnoseQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // Step 3: proposed deadline
   const [proposedDeadline, setProposedDeadline] = useState("");
@@ -82,12 +90,20 @@ export default function NewQuestPage() {
     setError("");
     setStep("loading-diagnose");
     try {
-      const { questions } = await diagnose(goal, desiredDeadline);
+      const { questions } = await diagnose(goal, desiredDeadline, context || undefined);
       setQuestions(questions);
+      setCurrentQuestionIndex(0);
       setStep("questions");
     } catch (e: any) {
       setError(e.response?.data?.detail || "診断質問の生成に失敗しました");
       setStep("input");
+    }
+  };
+
+  const handleSelectAnswer = (questionId: string, option: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: option }));
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((i) => i + 1);
     }
   };
 
@@ -158,22 +174,32 @@ export default function NewQuestPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-parchment p-4">
-      <div className="card-fantasy rounded-2xl p-8 w-full max-w-md">
+    <div className="min-h-screen bg-parchment">
+      <header className="bg-[#2D6A4F] h-16 flex items-center">
+        <div className="w-full max-w-md mx-auto px-4 flex justify-between items-center">
+          <Link href="/dashboard" className="text-sm text-white/80 hover:text-white transition">
+            ← ダッシュボードに戻る
+          </Link>
+          <span className="font-display text-sm font-bold text-white">ProgressQuest</span>
+        </div>
+      </header>
+
+      <div className="flex items-center justify-center p-4">
+      <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-8 w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-amber-400 flex items-center justify-center text-2xl mb-3 shadow-inner">
+          <div className="w-14 h-14 rounded-2xl bg-[#E9A62A] flex items-center justify-center text-2xl mb-3 shadow-neumorphism-sm">
             🗺️
           </div>
-          <h1 className="font-display text-xl font-bold text-emerald-900 text-center">
+          <h1 className="font-display text-xl font-bold text-[#2D6A4F] text-center">
             新しいクエストを始める
           </h1>
-          <p className="text-xs text-amber-700 tracking-widest uppercase mt-1">
+          <p className="text-xs text-[#888888] tracking-widest uppercase mt-1">
             Quest Initiation
           </p>
         </div>
 
         {error && (
-          <p className="text-red-600 text-sm mb-4 text-center bg-red-50 border border-red-200 rounded-lg py-2">
+          <p className="text-[#E05252] text-sm mb-4 text-center bg-[#E05252]/10 rounded-lg py-2">
             {error}
           </p>
         )}
@@ -182,19 +208,19 @@ export default function NewQuestPage() {
           <div className="space-y-3">
             <button
               onClick={() => setStep("input")}
-              className="w-full text-left bg-amber-50/40 border border-amber-200 rounded-lg p-4 hover:bg-amber-100 transition"
+              className="w-full text-left bg-[#F5F0E8] rounded-xl p-4 shadow-neumorphism-sm hover:opacity-90 transition"
             >
-              <p className="font-display font-bold text-emerald-900">🤖 AIで作る</p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="font-display font-bold text-[#2D6A4F]">🤖 AIで作る</p>
+              <p className="text-xs text-[#888888] mt-1">
                 目標を伝えるとAIが診断し、期日とロードマップを自動生成します
               </p>
             </button>
             <button
               onClick={() => setStep("manual")}
-              className="w-full text-left bg-amber-50/40 border border-amber-200 rounded-lg p-4 hover:bg-amber-100 transition"
+              className="w-full text-left bg-[#F5F0E8] rounded-xl p-4 shadow-neumorphism-sm hover:opacity-90 transition"
             >
-              <p className="font-display font-bold text-emerald-900">✍️ 手動で作る</p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="font-display font-bold text-[#2D6A4F]">✍️ 手動で作る</p>
+              <p className="text-xs text-[#888888] mt-1">
                 タイトル・説明・期日を自分で入力してすぐに作成します
               </p>
             </button>
@@ -204,50 +230,44 @@ export default function NewQuestPage() {
         {step === "manual" && (
           <>
             <div className="mb-4">
-              <label className="block text-xs font-bold text-amber-700 tracking-widest uppercase mb-1">
-                ⚔️ クエスト名
-              </label>
+              <label className={labelClass}>⚔️ クエスト名</label>
               <input
                 type="text"
                 value={manualTitle}
                 onChange={(e) => setManualTitle(e.target.value)}
-                className="w-full border border-amber-200 rounded-lg px-4 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className={inputClass}
                 placeholder="例：Reactを習得する"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-xs font-bold text-amber-700 tracking-widest uppercase mb-1">
-                📜 詳細（任意）
-              </label>
+              <label className={labelClass}>📜 詳細（任意）</label>
               <textarea
                 value={manualDescription}
                 onChange={(e) => setManualDescription(e.target.value)}
-                className="w-full border border-amber-200 rounded-lg px-4 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full rounded-xl px-4 py-3 bg-[#F5F0E8] shadow-neumorphism-inset focus:outline-none"
                 placeholder="目標の詳細"
                 rows={3}
               />
             </div>
             <div className="mb-6">
-              <label className="block text-xs font-bold text-amber-700 tracking-widest uppercase mb-1">
-                🏁 期日（任意）
-              </label>
+              <label className={labelClass}>🏁 期日（任意）</label>
               <input
                 type="date"
                 value={manualDeadline}
                 onChange={(e) => setManualDeadline(e.target.value)}
-                className="w-full border border-amber-200 rounded-lg px-4 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className={inputClass}
               />
             </div>
             <button
               onClick={handleManualSubmit}
               disabled={manualSubmitting}
-              className="w-full bg-amber-400 text-amber-950 font-bold py-3 rounded-lg hover:bg-amber-300 transition shadow-md disabled:opacity-50"
+              className={`${primaryButtonClass} disabled:opacity-50`}
             >
               {manualSubmitting ? "作成中..." : "クエストを作成する ⚔️"}
             </button>
             <button
               onClick={() => setStep("choose")}
-              className="w-full text-center mt-2 text-xs text-slate-400 hover:text-slate-600"
+              className="w-full text-center mt-2 text-xs text-[#888888] hover:opacity-70"
             >
               ← 戻る
             </button>
@@ -257,37 +277,43 @@ export default function NewQuestPage() {
         {step === "input" && (
           <>
             <div className="mb-4">
-              <label className="block text-xs font-bold text-amber-700 tracking-widest uppercase mb-1">
-                ⚔️ クエスト（目標）
-              </label>
+              <label className={labelClass}>⚔️ クエスト（目標）</label>
               <input
                 type="text"
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
-                className="w-full border border-amber-200 rounded-lg px-4 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className={inputClass}
                 placeholder="例：Reactを習得する"
               />
             </div>
-            <div className="mb-6">
-              <label className="block text-xs font-bold text-amber-700 tracking-widest uppercase mb-1">
-                🏁 希望期日
-              </label>
+            <div className="mb-4">
+              <label className={labelClass}>🏁 希望期日</label>
               <input
                 type="date"
                 value={desiredDeadline}
                 onChange={(e) => setDesiredDeadline(e.target.value)}
-                className="w-full border border-amber-200 rounded-lg px-4 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className={inputClass}
               />
             </div>
-            <button
-              onClick={handleStartDiagnose}
-              className="w-full bg-amber-400 text-amber-950 font-bold py-3 rounded-lg hover:bg-amber-300 transition shadow-md"
-            >
+            <div className="mb-6">
+              <label className={labelClass}>📝 補足情報（任意）</label>
+              <textarea
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+                className="w-full rounded-xl px-4 py-3 bg-[#F5F0E8] shadow-neumorphism-inset focus:outline-none"
+                placeholder="例：プログラミング未経験だけど絵を描くのは得意、平日は仕事で忙しい、など"
+                rows={3}
+              />
+              <p className="text-xs text-[#888888] mt-1">
+                書いておくとAIの診断・ロードマップの精度が上がります
+              </p>
+            </div>
+            <button onClick={handleStartDiagnose} className={primaryButtonClass}>
               AIに診断してもらう ⚔️
             </button>
             <button
               onClick={() => setStep("choose")}
-              className="w-full text-center mt-2 text-xs text-slate-400 hover:text-slate-600"
+              className="w-full text-center mt-2 text-xs text-[#888888] hover:opacity-70"
             >
               ← 戻る
             </button>
@@ -299,7 +325,7 @@ export default function NewQuestPage() {
           step === "loading-roadmap" ||
           step === "creating") && (
           <div className="text-center py-10">
-            <p className="text-emerald-800 font-display font-bold animate-pulse">
+            <p className="text-[#2D6A4F] font-display font-bold animate-pulse">
               {step === "loading-diagnose" && "AIが診断質問を考えています..."}
               {step === "loading-propose" && "AIが現実的な期日を考えています..."}
               {step === "loading-roadmap" && "AIがロードマップを作成しています..."}
@@ -308,55 +334,76 @@ export default function NewQuestPage() {
           </div>
         )}
 
-        {step === "questions" && (
+        {step === "questions" && questions.length > 0 && (
           <>
-            <p className="text-xs text-amber-700 tracking-widest uppercase mb-4">
-              現在地診断
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-xs text-[#2D6A4F] tracking-widest uppercase">現在地診断</p>
+              <p className="text-xs text-[#888888] font-bold">
+                質問 {currentQuestionIndex + 1} / {questions.length}
+              </p>
+            </div>
+            <div className="w-full bg-[#e8e0d0] rounded-full h-2 mb-6 overflow-hidden">
+              <div
+                className="h-2 rounded-full transition-all"
+                style={{
+                  width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
+                  background: "linear-gradient(90deg, #2D6A4F, #52B788)",
+                }}
+              />
+            </div>
+
+            <p className="font-bold text-base text-[#2C2C2C] mb-4">
+              {questions[currentQuestionIndex].text}
             </p>
-            <div className="space-y-5 mb-6">
-              {questions.map((q) => (
-                <div key={q.id}>
-                  <p className="font-bold text-sm text-slate-800 mb-2">{q.text}</p>
-                  <div className="space-y-1">
-                    {q.options.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: opt }))}
-                        className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition ${
-                          answers[q.id] === opt
-                            ? "bg-emerald-50 border-emerald-400 font-bold text-emerald-800"
-                            : "bg-amber-50/40 border-amber-200 hover:bg-amber-100 text-slate-700"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <div className="space-y-2 mb-6">
+              {questions[currentQuestionIndex].options.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => handleSelectAnswer(questions[currentQuestionIndex].id, opt)}
+                  className={`w-full text-left px-3 py-3 bg-[#F5F0E8] rounded-xl text-sm transition ${
+                    answers[questions[currentQuestionIndex].id] === opt
+                      ? "shadow-neumorphism-inset font-bold text-[#2D6A4F]"
+                      : "shadow-neumorphism-sm hover:opacity-90 text-[#2C2C2C]"
+                  }`}
+                >
+                  {opt}
+                </button>
               ))}
             </div>
-            <button
-              onClick={handleSubmitAnswers}
-              className="w-full bg-amber-400 text-amber-950 font-bold py-3 rounded-lg hover:bg-amber-300 transition shadow-md"
-            >
-              診断結果を見る ⚔️
-            </button>
+
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setCurrentQuestionIndex((i) => Math.max(0, i - 1))}
+                disabled={currentQuestionIndex === 0}
+                className="text-xs text-[#888888] hover:opacity-70 disabled:opacity-0"
+              >
+                ← 前の質問
+              </button>
+              <p className="text-xs text-[#888888]">
+                {currentQuestionIndex < questions.length - 1
+                  ? `あと${questions.length - currentQuestionIndex - 1}問`
+                  : "最後の質問です"}
+              </p>
+            </div>
+
+            {currentQuestionIndex === questions.length - 1 &&
+              answers[questions[currentQuestionIndex].id] && (
+                <button onClick={handleSubmitAnswers} className={`${primaryButtonClass} mt-4`}>
+                  診断結果を見る ⚔️
+                </button>
+              )}
           </>
         )}
 
         {step === "deadline" && (
           <>
-            <p className="text-xs text-amber-700 tracking-widest uppercase mb-2">
-              AIの診断結果
-            </p>
-            <p className="text-sm text-slate-600 italic mb-4">「{diagnosisSummary}」</p>
+            <p className="text-xs text-[#2D6A4F] tracking-widest uppercase mb-2">AIの診断結果</p>
+            <p className="text-sm text-[#2C2C2C] italic mb-4">「{diagnosisSummary}」</p>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <p className="text-xs font-bold text-blue-500 mb-1">⚔️ AIの提案期日</p>
-              <p className="font-display font-bold text-lg text-slate-800">
-                {proposedDeadline}
-              </p>
-              <p className="text-sm text-slate-600 mt-2">{reason}</p>
+            <div className="bg-[#F5F0E8] rounded-xl p-4 mb-4 shadow-neumorphism-inset">
+              <p className="text-xs font-bold text-[#E9A62A] mb-1">⚔️ AIの提案期日</p>
+              <p className="font-display font-bold text-lg text-[#2C2C2C]">{proposedDeadline}</p>
+              <p className="text-sm text-[#2C2C2C] mt-2">{reason}</p>
             </div>
 
             <div className="flex gap-2 mb-4">
@@ -365,20 +412,20 @@ export default function NewQuestPage() {
                   setCustomDeadline(false);
                   setFinalDeadline(proposedDeadline);
                 }}
-                className={`flex-1 py-2 rounded-lg border text-sm font-bold transition ${
+                className={`flex-1 h-12 bg-[#F5F0E8] rounded-xl text-sm font-bold transition ${
                   !customDeadline
-                    ? "bg-emerald-50 border-emerald-400 text-emerald-800"
-                    : "bg-amber-50/40 border-amber-200 text-slate-600"
+                    ? "shadow-neumorphism-inset text-[#2D6A4F]"
+                    : "shadow-neumorphism-sm text-[#888888]"
                 }`}
               >
                 この期日を採用する
               </button>
               <button
                 onClick={() => setCustomDeadline(true)}
-                className={`flex-1 py-2 rounded-lg border text-sm font-bold transition ${
+                className={`flex-1 h-12 bg-[#F5F0E8] rounded-xl text-sm font-bold transition ${
                   customDeadline
-                    ? "bg-emerald-50 border-emerald-400 text-emerald-800"
-                    : "bg-amber-50/40 border-amber-200 text-slate-600"
+                    ? "shadow-neumorphism-inset text-[#2D6A4F]"
+                    : "shadow-neumorphism-sm text-[#888888]"
                 }`}
               >
                 自分で設定する
@@ -390,14 +437,11 @@ export default function NewQuestPage() {
                 type="date"
                 value={finalDeadline}
                 onChange={(e) => setFinalDeadline(e.target.value)}
-                className="w-full border border-amber-200 rounded-lg px-4 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4"
+                className={`${inputClass} mb-4`}
               />
             )}
 
-            <button
-              onClick={handleGenerateRoadmap}
-              className="w-full bg-amber-400 text-amber-950 font-bold py-3 rounded-lg hover:bg-amber-300 transition shadow-md"
-            >
+            <button onClick={handleGenerateRoadmap} className={primaryButtonClass}>
               ロードマップを生成する ⚔️
             </button>
           </>
@@ -405,31 +449,26 @@ export default function NewQuestPage() {
 
         {step === "roadmap" && (
           <>
-            <p className="text-xs text-amber-700 tracking-widest uppercase mb-4">
+            <p className="text-xs text-[#2D6A4F] tracking-widest uppercase mb-4">
               生成されたロードマップ（期日: {finalDeadline}）
             </p>
             <div className="space-y-2 mb-6 max-h-80 overflow-y-auto">
               {checkpoints.map((cp, i) => (
-                <div
-                  key={i}
-                  className="bg-amber-50/40 border border-amber-200 rounded-lg px-3 py-2"
-                >
-                  <p className="font-bold text-sm text-slate-800">
+                <div key={i} className="bg-[#F5F0E8] rounded-xl px-3 py-2 shadow-neumorphism-sm">
+                  <p className="font-bold text-sm text-[#2C2C2C]">
                     {cp.order_index}. {cp.title}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">{cp.description}</p>
-                  <p className="text-xs text-amber-700 mt-1">期日: {cp.due_date}</p>
+                  <p className="text-xs text-[#888888] mt-0.5">{cp.description}</p>
+                  <p className="text-xs text-[#2D6A4F] mt-1">期日: {cp.due_date}</p>
                 </div>
               ))}
             </div>
-            <button
-              onClick={handleCreateQuest}
-              className="w-full bg-amber-400 text-amber-950 font-bold py-3 rounded-lg hover:bg-amber-300 transition shadow-md"
-            >
+            <button onClick={handleCreateQuest} className={primaryButtonClass}>
               このクエストを始める ⚔️
             </button>
           </>
         )}
+      </div>
       </div>
     </div>
   );

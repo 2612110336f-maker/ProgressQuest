@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Cinzel, Noto_Serif_JP } from "next/font/google";
+import { Cinzel, Inter, Noto_Serif_JP } from "next/font/google";
 import "./globals.css";
 
 const cinzel = Cinzel({
   variable: "--font-cinzel",
+  subsets: ["latin"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -26,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${cinzel.variable} ${notoSerifJP.variable} h-full antialiased`}
+      className={`${cinzel.variable} ${inter.variable} ${notoSerifJP.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

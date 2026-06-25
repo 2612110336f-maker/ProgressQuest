@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbf6ea;
-  --foreground: #3f3522;
+  --background: #f5f0e8;
+  --foreground: #2c2c2c;
 }
 
 @theme inline {
@@ -15,7 +15,9 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-noto-serif-jp), serif;
+  /* Inter covers Latin glyphs; characters it doesn't have (Japanese) fall
+     through to Noto Serif JP automatically, per-glyph. */
+  font-family: var(--font-inter), var(--font-noto-serif-jp), sans-serif;
 }
 
 .font-display {
@@ -23,15 +25,26 @@ body {
 }
 
 .bg-parchment {
-  background-color: #fbf6ea;
-  background-image:
-    radial-gradient(circle at 15% 10%, rgba(74, 124, 89, 0.12), transparent 45%),
-    radial-gradient(circle at 85% 0%, rgba(180, 140, 60, 0.14), transparent 45%),
-    radial-gradient(circle at 50% 100%, rgba(74, 124, 89, 0.1), transparent 50%);
+  background-color: #f5f0e8;
 }
 
+/* Neumorphism: shadows only read correctly against this exact background
+   color, so never use these classes on a card with a different fill. */
 .card-fantasy {
-  background: #fffdf7;
-  border: 1px solid #e7d9b8;
-  box-shadow: 0 8px 24px -8px rgba(120, 90, 40, 0.25);
+  background: #f5f0e8;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 6px 6px 12px #d4cfc6, -6px -6px 12px #ffffff;
+}
+
+.shadow-neumorphism {
+  box-shadow: 6px 6px 12px #d4cfc6, -6px -6px 12px #ffffff;
+}
+
+.shadow-neumorphism-sm {
+  box-shadow: 4px 4px 8px #d4cfc6, -2px -2px 6px #ffffff;
+}
+
+.shadow-neumorphism-inset {
+  box-shadow: inset 3px 3px 6px #d4cfc6, inset -2px -2px 5px #ffffff;
 }

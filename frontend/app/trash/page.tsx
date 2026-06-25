@@ -38,41 +38,44 @@ export default function TrashPage() {
 
   return (
     <div className="min-h-screen bg-parchment">
-      <header className="card-fantasy">
-        <div className="max-w-2xl mx-auto px-4 sm:px-8 py-4 flex justify-between items-center">
-          <Link href="/dashboard" className="text-sm text-emerald-700 hover:underline">
+      <header className="bg-[#2D6A4F] h-16 flex items-center">
+        <div className="w-full max-w-2xl mx-auto px-4 sm:px-8 flex justify-between items-center">
+          <Link href="/dashboard" className="text-sm text-white/80 hover:text-white transition">
             ← ダッシュボードに戻る
           </Link>
-          <h1 className="font-display text-lg font-bold text-emerald-900">🗑️ ゴミ箱</h1>
+          <h1 className="font-display text-lg font-bold text-white">🗑️ ゴミ箱</h1>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto p-4 sm:p-8">
-        {loading && <p className="text-amber-700 font-display">読み込み中...</p>}
+        {loading && <p className="text-[#2D6A4F] font-display">読み込み中...</p>}
 
         {!loading && quests.length === 0 && (
-          <p className="text-slate-500 text-center py-10">ゴミ箱は空です。</p>
+          <p className="text-[#888888] text-center py-10">ゴミ箱は空です。</p>
         )}
 
         <div className="space-y-3">
           {quests.map((q) => (
-            <div key={q.id} className="card-fantasy rounded-xl p-4 flex justify-between items-center gap-3">
+            <div
+              key={q.id}
+              className="bg-[#F5F0E8] shadow-neumorphism rounded-xl p-4 flex justify-between items-center gap-3"
+            >
               <div>
-                <p className="font-bold text-slate-800">{q.title}</p>
+                <p className="font-bold text-[#2C2C2C]">{q.title}</p>
                 {q.description && (
-                  <p className="text-xs text-slate-500 mt-0.5 italic">「{q.description}」</p>
+                  <p className="text-xs text-[#888888] mt-0.5 italic">「{q.description}」</p>
                 )}
               </div>
               <div className="flex gap-2 shrink-0">
                 <button
                   onClick={() => handleRestore(q.id)}
-                  className="text-xs bg-emerald-50 border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition font-bold"
+                  className="text-xs h-9 px-3 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
                 >
                   復元する
                 </button>
                 <button
                   onClick={() => handlePermanentDelete(q.id)}
-                  className="text-xs bg-red-50 border border-red-300 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition font-bold"
+                  className="text-xs h-9 px-3 rounded-xl bg-[#E05252] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
                 >
                   完全に削除
                 </button>
