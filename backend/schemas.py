@@ -70,3 +70,43 @@ class QuestOut(BaseModel):
 
 class QuestDetailOut(QuestOut):
     checkpoints: list[CheckpointOut] = []
+
+class DiagnoseRequest(BaseModel):
+    goal: str
+    desired_deadline: date
+
+class DiagnoseQuestion(BaseModel):
+    id: str
+    text: str
+    options: list[str]
+
+class DiagnoseResponse(BaseModel):
+    questions: list[DiagnoseQuestion]
+
+class DiagnoseAnswer(BaseModel):
+    question_id: str
+    answer: str
+
+class ProposeDeadlineRequest(BaseModel):
+    goal: str
+    desired_deadline: date
+    answers: list[DiagnoseAnswer]
+
+class ProposeDeadlineResponse(BaseModel):
+    proposed_deadline: date
+    reason: str
+    diagnosis_summary: str
+
+class GenerateRoadmapRequest(BaseModel):
+    goal: str
+    final_deadline: date
+    diagnosis_summary: str
+
+class RoadmapCheckpoint(BaseModel):
+    title: str
+    description: str
+    due_date: date
+    order_index: int
+
+class GenerateRoadmapResponse(BaseModel):
+    checkpoints: list[RoadmapCheckpoint]

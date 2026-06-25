@@ -89,9 +89,7 @@ export default function DashboardPage() {
             <h1 className="font-display text-lg font-bold text-emerald-900">ProgressQuest</h1>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-amber-900 bg-amber-200 border border-amber-300 rounded-full px-3 py-1">
-              ⚔️ レベル{level} ・ {xp}XP
-            </span>
+            {/* レベル/XP表示は一時的に非表示（計算自体は裏で動き続ける） */}
             <button
               onClick={handleLogout}
               className="text-sm text-slate-400 hover:text-red-500 transition"

@@ -24,6 +24,7 @@ export default function QuestDetailPage() {
   const [error, setError] = useState("");
 
   const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
 
   const load = async () => {
@@ -50,10 +51,12 @@ export default function QuestDetailPage() {
     if (!newTitle.trim()) return;
     await createCheckpoint(questId, {
       title: newTitle,
+      description: newDescription || undefined,
       due_date: newDueDate || undefined,
       order_index: (quest?.checkpoints.length || 0) + 1,
     });
     setNewTitle("");
+    setNewDescription("");
     setNewDueDate("");
     load();
   };
@@ -179,26 +182,35 @@ export default function QuestDetailPage() {
               <h3 className="font-bold mb-3 text-xs text-amber-700 tracking-widest uppercase">
                 チェックポイントを追加
               </h3>
-              <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <input
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="タイトル"
-                  className="flex-1 border border-amber-200 rounded-lg px-3 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                />
-                <input
-                  type="date"
-                  value={newDueDate}
-                  onChange={(e) => setNewDueDate(e.target.value)}
                   className="border border-amber-200 rounded-lg px-3 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                 />
-                <button
-                  onClick={handleAddCheckpoint}
-                  className="bg-amber-400 text-amber-950 px-4 py-2 rounded-lg hover:bg-amber-300 transition font-bold text-sm shadow-md"
-                >
-                  追加
-                </button>
+                <textarea
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  placeholder="詳細（任意）"
+                  rows={2}
+                  className="border border-amber-200 rounded-lg px-3 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                />
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="date"
+                    value={newDueDate}
+                    onChange={(e) => setNewDueDate(e.target.value)}
+                    className="flex-1 border border-amber-200 rounded-lg px-3 py-2 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  />
+                  <button
+                    onClick={handleAddCheckpoint}
+                    className="bg-amber-400 text-amber-950 px-4 py-2 rounded-lg hover:bg-amber-300 transition font-bold text-sm shadow-md"
+                  >
+                    追加
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -211,20 +223,27 @@ export default function QuestDetailPage() {
                   {items.map(({ checkpoint }) => (
                     <div
                       key={checkpoint.id}
-                      className="flex items-center justify-between card-fantasy rounded-lg px-3 py-2"
+                      className="flex items-start justify-between card-fantasy rounded-lg px-3 py-2"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-start gap-2">
                         <input
                           type="checkbox"
                           checked={!!checkpoint.completed_at}
                           onChange={() => handleToggleComplete(checkpoint)}
-                          className="w-4 h-4"
+                          className="w-4 h-4 mt-0.5"
                         />
-                        <span className="text-sm text-slate-700">{checkpoint.title}</span>
+                        <div>
+                          <span className="text-sm text-slate-700">{checkpoint.title}</span>
+                          {checkpoint.description && (
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {checkpoint.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <button
                         onClick={() => handleDeleteCheckpoint(checkpoint.id)}
-                        className="text-xs text-slate-400 hover:text-red-500"
+                        className="text-xs text-slate-400 hover:text-red-500 shrink-0"
                       >
                         削除
                       </button>
