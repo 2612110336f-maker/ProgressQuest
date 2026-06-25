@@ -7,8 +7,8 @@ import {
   QuestDetail,
   createCheckpoint,
   deleteCheckpoint,
-  deleteQuest,
   getQuest,
+  trashQuest,
   updateCheckpoint,
 } from "@/lib/api";
 import { getCheckpointStatuses } from "@/lib/questStatus";
@@ -26,6 +26,7 @@ export default function QuestDetailPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const load = async () => {
     try {
@@ -62,8 +63,15 @@ export default function QuestDetailPage() {
   };
 
   const handleToggleComplete = async (checkpoint: Checkpoint) => {
+    const wasAllCompleted =
+      !!quest && quest.checkpoints.length > 0 && quest.checkpoints.every((cp) => cp.completed_at);
     await updateCheckpoint(checkpoint.id, { completed: !checkpoint.completed_at });
-    load();
+    const data = await getQuest(questId);
+    setQuest(data);
+    const isAllCompletedNow = data.checkpoints.length > 0 && data.checkpoints.every((cp) => cp.completed_at);
+    if (isAllCompletedNow && !wasAllCompleted) {
+      setShowCelebration(true);
+    }
   };
 
   const handleDeleteCheckpoint = async (id: string) => {
@@ -71,9 +79,9 @@ export default function QuestDetailPage() {
     load();
   };
 
-  const handleDeleteQuest = async () => {
-    if (!confirm("このクエストを削除しますか？")) return;
-    await deleteQuest(questId);
+  const handleTrashQuest = async () => {
+    if (!confirm("このクエストをゴミ箱に入れますか？")) return;
+    await trashQuest(questId);
     router.push("/dashboard");
   };
 
@@ -105,10 +113,10 @@ export default function QuestDetailPage() {
             ← ダッシュボードに戻る
           </Link>
           <button
-            onClick={handleDeleteQuest}
+            onClick={handleTrashQuest}
             className="text-xs text-red-500 hover:underline"
           >
-            削除
+            🗑️ ゴミ箱に入れる
           </button>
         </div>
       </header>
@@ -255,6 +263,45 @@ export default function QuestDetailPage() {
           </div>
         </div>
       </main>
+
+      {showCelebration && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="card-fantasy rounded-2xl p-8 w-full max-w-sm text-center">
+            <p className="text-5xl mb-3">🏆</p>
+            <p className="font-display text-2xl font-bold text-emerald-900 mb-1">
+              クエストクリア！
+            </p>
+            <p className="text-sm text-slate-600 mb-4">
+              「{quest.title}」を達成しました。伝説の冒険者の称号を獲得！
+            </p>
+            <div className="bg-amber-50/60 border border-amber-200 rounded-lg p-3 mb-6 text-sm text-slate-700">
+              <p>クリアしたチェックポイント: {quest.checkpoints.length}個</p>
+              <p>
+                かかった日数:{" "}
+                {Math.max(
+                  1,
+                  Math.ceil(
+                    (Date.now() - new Date(quest.created_at).getTime()) / (1000 * 60 * 60 * 24)
+                  )
+                )}
+                日
+              </p>
+            </div>
+            <button
+              onClick={handleTrashQuest}
+              className="w-full bg-amber-400 text-amber-950 font-bold py-2 rounded-lg hover:bg-amber-300 transition shadow-md mb-2"
+            >
+              🗑️ ゴミ箱に入れる
+            </button>
+            <button
+              onClick={() => setShowCelebration(false)}
+              className="w-full text-center text-sm text-slate-400 hover:text-slate-600"
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

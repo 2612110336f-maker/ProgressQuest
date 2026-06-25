@@ -47,6 +47,7 @@ export type Quest = {
   final_deadline: string | null;
   diagnosis_result: unknown;
   created_at: string;
+  archived_at: string | null;
 };
 
 export type QuestDetail = Quest & {
@@ -88,6 +89,21 @@ export const updateQuest = async (
 
 export const deleteQuest = async (id: string) => {
   const res = await api.delete(`/quests/${id}`);
+  return res.data;
+};
+
+export const trashQuest = async (id: string): Promise<Quest> => {
+  const res = await api.post(`/quests/${id}/trash`);
+  return res.data;
+};
+
+export const restoreQuest = async (id: string): Promise<Quest> => {
+  const res = await api.post(`/quests/${id}/restore`);
+  return res.data;
+};
+
+export const getTrashedQuests = async (): Promise<Quest[]> => {
+  const res = await api.get("/quests/trash");
   return res.data;
 };
 

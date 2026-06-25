@@ -90,6 +90,12 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             {/* レベル/XP表示は一時的に非表示（計算自体は裏で動き続ける） */}
+            <Link
+              href="/trash"
+              className="text-sm text-slate-400 hover:text-amber-700 transition"
+            >
+              🗑️ ゴミ箱
+            </Link>
             <button
               onClick={handleLogout}
               className="text-sm text-slate-400 hover:text-red-500 transition"
