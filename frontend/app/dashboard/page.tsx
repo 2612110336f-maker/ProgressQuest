@@ -121,25 +121,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* 経験値バー (レベル進行状況) */}
-        <div className="card-fantasy rounded-2xl p-4 bg-card/40 border border-border">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-bold text-slate-350 uppercase tracking-widest font-display">
-              Character Level (レベル {level})
-            </span>
-            <span className="text-xs font-bold text-slate-450 font-display">
-              {xp % 500} / 500 XP (Next Level: Lvl {level + 1})
-            </span>
-          </div>
-          <div className="w-full bg-slate-900/60 rounded-full h-3 border border-border overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-primary to-secondary h-3 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
-              style={{ width: `${((xp % 500) / 500) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* 進行中のクエストがない場合 */}
         {questDetails.length === 0 && (
           <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-8 text-center">
             <p className="text-[#888888] mb-4">まだクエストがありません。</p>
@@ -147,63 +128,11 @@ export default function DashboardPage() {
               href="/new"
               className="inline-flex items-center justify-center h-12 px-6 rounded-xl bg-[#E9A62A] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
             >
-              ＋ クエストを創生する ⚔️
+              ＋ 新しいクエストを始める
             </Link>
           </div>
         )}
 
-        {/* 最優先タスク (今日やるべきタスク) - 最上部に配置 */}
-        {activeQuest && nextCheckpoint && (
-          <div
-            className={`rounded-2xl p-5 border shadow-xl relative overflow-hidden transition-all duration-300 ${
-              isOverdue(nextCheckpoint.due_date)
-                ? "bg-danger/10 border-danger text-slate-200"
-                : "bg-secondary/15 border-secondary/40 text-slate-200"
-            }`}
-          >
-            {/* 動くパルスインジケータ */}
-            {isOverdue(nextCheckpoint.due_date) && (
-              <span className="absolute top-4 right-4 flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-danger"></span>
-              </span>
-            )}
-            
-            <span className="text-[10px] bg-slate-800 border border-slate-700 text-slate-350 rounded-full px-2.5 py-0.5 font-bold font-display uppercase tracking-wider">
-              {isOverdue(nextCheckpoint.due_date) ? "⚠️ Critical Quest" : "⚔️ Next Objective (最優先タスク)"}
-            </span>
-            <div className="mt-3 flex justify-between items-start gap-4 flex-wrap">
-              <div>
-                <h3 className="font-display font-bold text-lg text-slate-100">
-                  {nextCheckpoint.title}
-                </h3>
-                <p className="text-xs text-slate-400 mt-1 font-display">
-                  クエスト: <span className="font-bold text-slate-300">{activeQuest.title}</span>
-                </p>
-              </div>
-              {nextCheckpoint.due_date && (
-                <div className={`text-xs font-bold px-3 py-1 rounded-lg border font-display ${
-                  isOverdue(nextCheckpoint.due_date) 
-                    ? "bg-danger/20 border-danger/40 text-danger" 
-                    : "bg-slate-900 border-border text-slate-450"
-                }`}>
-                  期日: {nextCheckpoint.due_date} {isOverdue(nextCheckpoint.due_date) && "(期日超過!)"}
-                </div>
-              )}
-            </div>
-            
-            <div className="mt-4 flex gap-3">
-              <Link
-                href={`/quest/${activeQuest.id}`}
-                className="bg-slate-850 hover:bg-slate-800 border border-border text-slate-300 text-xs px-4 py-2 rounded-lg font-display transition"
-              >
-                詳細を見る 📜
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* 進行中のクエストメインビュー */}
         {activeQuest && (
           <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-5">
             <h2 className="font-display text-xl font-bold text-[#2C2C2C] mb-1">
@@ -259,7 +188,7 @@ export default function DashboardPage() {
                   href={`/quest/${activeQuest.id}`}
                   className="flex items-center justify-center h-12 mt-4 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
                 >
-                  作戦地図を展開 🗺️
+                  地図を見る
                 </Link>
               </div>
 
@@ -290,7 +219,7 @@ export default function DashboardPage() {
 
       {showModal && (
         <div
-          className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
           onClick={() => setShowModal(false)}
         >
           <div

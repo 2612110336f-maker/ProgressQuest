@@ -184,7 +184,7 @@ export default function QuestDetailPage() {
                     current.status === "overdue" ? "text-[#E05252]" : "text-[#2D6A4F]"
                   }`}
                 >
-                  {current.status === "overdue" ? "⚠️ 警告：期日超過" : "⚔️ 現在進行中"}
+                  {current.status === "overdue" ? "⚠️ 危険：期日超過" : "⚔️ 現在地"}
                 </p>
                 <p className="font-display font-bold text-lg text-[#2C2C2C]">
                   {current.checkpoint.title}

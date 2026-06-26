@@ -1,6 +1,5 @@
 "use client";
-
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -79,10 +78,7 @@ export default function NewQuestPage() {
       });
       router.push(`/quest/${quest.id}`);
     } catch (e: any) {
-      console.warn("API呼び出しに失敗したため、モックデータで継続します", e);
-      // Fallback
-      setQuestions(MOCK_QUESTIONS);
-      setStep(2);
+      setError(e.response?.data?.detail || "エラーが発生しました");
     } finally {
       setManualSubmitting(false);
     }
@@ -179,156 +175,6 @@ export default function NewQuestPage() {
     }
   };
 
-  // API呼出 (Step 2 -> Step 3)
-  const handleProposeDeadline = async () => {
-    // 全て回答しているかチェック
-    const unanswered = questions.some((q) => !answers[q.id]);
-    if (unanswered) {
-      setError("すべての質問に回答してください");
-      return;
-    }
-    setError("");
-    setLoading(true);
-
-    const formattedAnswers = Object.entries(answers).map(([question_id, answer]) => ({
-      question_id,
-      answer,
-    }));
-
-    try {
-      const res = await proposeDeadline(title, desiredDeadline, formattedAnswers);
-      setProposedDeadline(res.proposed_deadline);
-      setReason(res.reason);
-      setDiagnosisSummary(res.diagnosis_summary);
-      setFinalDeadline(res.proposed_deadline);
-      setStep(3);
-    } catch (e: any) {
-      console.warn("API呼び出しに失敗したため、モックデータで継続します", e);
-      // Fallback
-      const date = new Date(desiredDeadline || Date.now());
-      date.setDate(date.getDate() + 14); // 2週間延ばす
-      const formattedDate = date.toISOString().split("T")[0];
-
-      setProposedDeadline(formattedDate);
-      setReason(
-        "現在の習熟度と確保可能な時間から算出すると、基礎習得とアウトプット作成にそれぞれ1週間ずつの猶予を持たせることで、挫折率を大幅に下げて確実にクリア可能です。"
-      );
-      setDiagnosisSummary(
-        `目標「${title}」に対する診断結果：初学者としての丁寧なステップアップと、日々の着実なタスク消化が必要です。`
-      );
-      setFinalDeadline(formattedDate);
-      setStep(3);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // API呼出 (Step 3 -> Step 4)
-  const handleGenerateRoadmap = async () => {
-    if (!finalDeadline) {
-      setError("最終期日を選択してください");
-      return;
-    }
-    setError("");
-    setLoading(true);
-
-    try {
-      const res = await generateRoadmap(title, finalDeadline, diagnosisSummary);
-      setCheckpoints(res.checkpoints);
-      setStep(4);
-    } catch (e: any) {
-      console.warn("API呼び出しに失敗したため、モックデータで継続します", e);
-      // Fallback: 5つのチェックポイントを自動生成
-      const mockCps: AICheckpointProposal[] = [
-        {
-          title: "基礎知識のインプットと環境構築",
-          description: "必要なツールを準備し、全体像と基礎のインプットを完了する。",
-          due_date: getIntermediateDate(desiredDeadline, 1, 5),
-          order_index: 1,
-        },
-        {
-          title: "簡単なモック・プロトタイプの作成",
-          description: "学んだ内容を元に、小さな機能やサンプルを動かしてみる。",
-          due_date: getIntermediateDate(desiredDeadline, 2, 5),
-          order_index: 2,
-        },
-        {
-          title: "応用技術の実装とコア機能の完成",
-          description: "最も重要で複雑なパートに取り組み、形にする。",
-          due_date: getIntermediateDate(desiredDeadline, 3, 5),
-          order_index: 3,
-        },
-        {
-          title: "最終調整・デバッグとテスト",
-          description: "全体を動かしバグを潰す。必要に応じてデプロイを行う。",
-          due_date: getIntermediateDate(desiredDeadline, 4, 5),
-          order_index: 4,
-        },
-        {
-          title: "クエストクリアとリファクタリング",
-          description: "コードを整理し、自分へのご褒美とともに目標達成を宣言する！",
-          due_date: finalDeadline,
-          order_index: 5,
-        },
-      ];
-      setCheckpoints(mockCps);
-      setStep(4);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 最終確定 & 保存
-  const handleConfirmSave = async () => {
-    setLoading(true);
-    try {
-      // 1. クエストを作成
-      const newQuest = await createQuest({
-        title,
-        description: description || diagnosisSummary || undefined,
-        original_deadline: desiredDeadline || undefined,
-        final_deadline: finalDeadline || undefined,
-      });
-
-      // 2. チェックポイントを順番に登録
-      for (const cp of checkpoints) {
-        await createCheckpoint(newQuest.id, {
-          title: cp.title,
-          description: cp.description || undefined,
-          due_date: cp.due_date || undefined,
-          order_index: cp.order_index,
-        });
-      }
-
-      // 詳細画面にリダイレクト
-      router.push(`/quest/${newQuest.id}`);
-    } catch (e: any) {
-      setError("クエストの保存に失敗しました。");
-      setLoading(false);
-    }
-  };
-
-  // 日付計算ヘルパー
-  const getIntermediateDate = (targetDateStr: string, stepNum: number, totalSteps: number) => {
-    const start = new Date();
-    const end = new Date(targetDateStr || Date.now());
-    const diffTime = Math.max(0, end.getTime() - start.getTime());
-    const stepMs = diffTime / totalSteps;
-    const currentMs = start.getTime() + stepMs * stepNum;
-    return new Date(currentMs).toISOString().split("T")[0];
-  };
-
-  const handleSelectOption = (qId: string, option: string) => {
-    setAnswers((prev) => ({ ...prev, [qId]: option }));
-  };
-
-  // アニメーション設定
-  const slideVariants = {
-    hidden: { opacity: 0, x: 50 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
-    exit: { opacity: 0, x: -50, transition: { duration: 0.3 } },
-  };
-
   return (
     <div className="min-h-screen bg-parchment">
       <header className="bg-[#2D6A4F] h-16 flex items-center">
@@ -354,13 +200,10 @@ export default function NewQuestPage() {
           </p>
         </div>
 
-        {/* ステッパー */}
-        <Stepper currentStep={step} steps={STEPS} />
-
         {error && (
           <p className="text-[#E05252] text-sm mb-4 text-center bg-[#E05252]/10 rounded-lg py-2">
             {error}
-          </div>
+          </p>
         )}
 
         {step === "choose" && (

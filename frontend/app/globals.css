@@ -8,17 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: #1E293B;
-  --color-border: #334155;
-  
-  --color-primary: #6C63FF;
-  --color-secondary: #8B5CF6;
-  --color-success: #22C55E;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-
-  --font-display: var(--font-nico-kaku);
-  --font-sans: var(--font-noto-sans-jp);
+  --font-display: var(--font-cinzel);
+  --font-serif-jp: var(--font-noto-serif-jp);
 }
 
 body {
@@ -39,10 +30,9 @@ input::placeholder, textarea::placeholder {
 }
 
 .font-display {
-  font-family: var(--font-nico-kaku), sans-serif;
+  font-family: var(--font-cinzel), serif;
 }
 
-/* 既存クラスのダークテーマ適応（互換性担保） */
 .bg-parchment {
   background-color: #f5f0e8;
 }

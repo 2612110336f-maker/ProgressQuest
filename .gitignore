@@ -4,3 +4,6 @@
 .env
 .env.local
 backend/progressquest.db
+backend/venv/
+backend/__pycache__/
+frontend/node_modules/
