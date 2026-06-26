@@ -47,6 +47,7 @@ export type Quest = {
   final_deadline: string | null;
   diagnosis_result: unknown;
   created_at: string;
+  archived_at: string | null;
 };
 
 export type QuestDetail = Quest & {
@@ -91,6 +92,21 @@ export const deleteQuest = async (id: string) => {
   return res.data;
 };
 
+export const trashQuest = async (id: string): Promise<Quest> => {
+  const res = await api.post(`/quests/${id}/trash`);
+  return res.data;
+};
+
+export const restoreQuest = async (id: string): Promise<Quest> => {
+  const res = await api.post(`/quests/${id}/restore`);
+  return res.data;
+};
+
+export const getTrashedQuests = async (): Promise<Quest[]> => {
+  const res = await api.get("/quests/trash");
+  return res.data;
+};
+
 export const createCheckpoint = async (
   questId: string,
   data: { title: string; description?: string; due_date?: string; order_index?: number }
@@ -118,38 +134,18 @@ export const deleteCheckpoint = async (id: string) => {
   return res.data;
 };
 
-export type AIQuestion = {
+export type DiagnoseQuestion = {
   id: string;
   text: string;
   options: string[];
 };
 
-export type AIDiagnoseResponse = {
-  questions: AIQuestion[];
-};
-
-export type AIProposeDeadlineResponse = {
-  proposed_deadline: string;
-  reason: string;
-  diagnosis_summary: string;
-};
-
-export type AICheckpointProposal = {
-  title: string;
-  description: string;
-  due_date: string;
-  order_index: number;
-};
-
-export type AIGenerateRoadmapResponse = {
-  checkpoints: AICheckpointProposal[];
-};
-
 export const diagnose = async (
   goal: string,
-  desired_deadline: string
-): Promise<AIDiagnoseResponse> => {
-  const res = await api.post("/ai/diagnose", { goal, desired_deadline });
+  desired_deadline: string,
+  context?: string
+): Promise<{ questions: DiagnoseQuestion[] }> => {
+  const res = await api.post("/ai/diagnose", { goal, desired_deadline, context });
   return res.data;
 };
 
@@ -157,17 +153,32 @@ export const proposeDeadline = async (
   goal: string,
   desired_deadline: string,
   answers: { question_id: string; answer: string }[]
-): Promise<AIProposeDeadlineResponse> => {
-  const res = await api.post("/ai/propose-deadline", { goal, desired_deadline, answers });
+): Promise<{ proposed_deadline: string; reason: string; diagnosis_summary: string }> => {
+  const res = await api.post("/ai/propose-deadline", {
+    goal,
+    desired_deadline,
+    answers,
+  });
   return res.data;
+};
+
+export type RoadmapCheckpoint = {
+  title: string;
+  description: string;
+  due_date: string;
+  order_index: number;
 };
 
 export const generateRoadmap = async (
   goal: string,
   final_deadline: string,
   diagnosis_summary: string
-): Promise<AIGenerateRoadmapResponse> => {
-  const res = await api.post("/ai/generate-roadmap", { goal, final_deadline, diagnosis_summary });
+): Promise<{ checkpoints: RoadmapCheckpoint[] }> => {
+  const res = await api.post("/ai/generate-roadmap", {
+    goal,
+    final_deadline,
+    diagnosis_summary,
+  });
   return res.data;
 };
 

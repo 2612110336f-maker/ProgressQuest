@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, get_db, Base
 import models, schemas, auth
-from routers import quests, checkpoints
+from routers import quests, checkpoints, ai
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,6 +19,7 @@ app.add_middleware(
 
 app.include_router(quests.router)
 app.include_router(checkpoints.router)
+app.include_router(ai.router)
 
 @app.post("/auth/register", response_model=schemas.Token)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):

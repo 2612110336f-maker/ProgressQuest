@@ -28,6 +28,7 @@ class Quest(Base):
     final_deadline = Column(Date, nullable=True)
     diagnosis_result = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
+    archived_at = Column(DateTime, nullable=True)
 
     checkpoints = relationship(
         "Checkpoint", back_populates="quest", cascade="all, delete-orphan"

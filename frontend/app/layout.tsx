@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP } from "next/font/google";
-import localFont from "next/font/local";
+import { Cinzel, Inter, Noto_Serif_JP } from "next/font/google";
 import "./globals.css";
 
 const nicoKaku = localFont({
@@ -9,8 +8,14 @@ const nicoKaku = localFont({
   display: "swap",
 });
 
-const notoSansJP = Noto_Sans_JP({
-  variable: "--font-noto-sans-jp",
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const notoSerifJP = Noto_Serif_JP({
+  variable: "--font-noto-serif-jp",
+  weight: ["400", "600", "700", "900"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -28,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${nicoKaku.variable} ${notoSansJP.variable} h-full antialiased dark`}
+      className={`${cinzel.variable} ${inter.variable} ${notoSerifJP.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#0F172A] text-[#F8FAFC]">
         {children}

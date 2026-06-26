@@ -7,7 +7,7 @@ const BOTTOM_MARGIN = 60;
 const LEFT_X = 90;
 const RIGHT_X = 230;
 const CENTER_X = 160;
-const NODE_RADIUS = 26;
+const NODE_RADIUS = 28;
 const PUCK_DEPTH = 7;
 const LABEL_WIDTH = 130;
 const LABEL_HEIGHT = 30;
@@ -49,10 +49,10 @@ function Puck({
   ringed?: boolean;
 }) {
   return (
-    <g>
+    <g filter="url(#node-shadow)">
       <ellipse cx={x} cy={y + r + 4} rx={r * 0.9} ry={r * 0.28} fill="#00000022" />
       {ringed && (
-        <circle cx={x} cy={y} r={r + 8} fill="none" stroke="#bee9ff" strokeWidth={4} />
+        <circle cx={x} cy={y} r={r + 8} fill="none" stroke="#ffffff" strokeWidth={4} />
       )}
       <circle cx={x} cy={y + PUCK_DEPTH} r={r} fill={colors.base} />
       <circle cx={x} cy={y} r={r} fill={colors.top} stroke="#ffffff" strokeWidth={4} />
@@ -106,6 +106,11 @@ export default function QuestMap({ items }: Props) {
 
   return (
     <svg viewBox={`0 0 ${VIEW_WIDTH} ${height}`} className="w-full" style={{ minHeight: 320 }}>
+      <defs>
+        <filter id="node-shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#000000" floodOpacity="0.25" />
+        </filter>
+      </defs>
       {points.slice(0, -1).map((p, i) => {
         const next = points[i + 1];
         const cx = p.x;
@@ -130,6 +135,7 @@ export default function QuestMap({ items }: Props) {
         r={NODE_RADIUS}
         colors={{ top: "#ffae00", base: "#e08e00", icon: "#ffffff" }}
         icon="🏁"
+        iconSize={26}
       />
       <text
         x={CENTER_X}
@@ -165,7 +171,7 @@ export default function QuestMap({ items }: Props) {
               height={LABEL_HEIGHT}
             >
               <div
-                className="bg-white border border-amber-200 rounded-full shadow-sm h-full flex items-center px-3 text-xs font-bold text-slate-700"
+                className="bg-white rounded-lg shadow-sm h-full flex items-center px-3 py-1 text-sm font-bold text-[#2C2C2C]"
                 style={{
                   justifyContent: labelOnLeft ? "flex-end" : "flex-start",
                   textAlign: labelOnLeft ? "right" : "left",
@@ -184,6 +190,7 @@ export default function QuestMap({ items }: Props) {
         r={NODE_RADIUS}
         colors={{ top: "#ffc800", base: "#e0a800", icon: "#ffffff" }}
         icon="🏆"
+        iconSize={26}
       />
       <text
         x={CENTER_X}

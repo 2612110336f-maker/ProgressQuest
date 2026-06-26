@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
@@ -20,7 +22,22 @@ def get_owned_quest(quest_id: str, db: Session, user: models.User) -> models.Que
 
 @router.get("", response_model=list[schemas.QuestOut])
 def list_quests(db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):
-    return db.query(models.Quest).filter(models.Quest.user_id == user.id).all()
+    return (
+        db.query(models.Quest)
+        .filter(models.Quest.user_id == user.id, models.Quest.archived_at.is_(None))
+        .all()
+    )
+
+
+@router.get("/trash", response_model=list[schemas.QuestOut])
+def list_trashed_quests(
+    db: Session = Depends(get_db), user: models.User = Depends(get_current_user)
+):
+    return (
+        db.query(models.Quest)
+        .filter(models.Quest.user_id == user.id, models.Quest.archived_at.isnot(None))
+        .all()
+    )
 
 
 @router.post("", response_model=schemas.QuestOut)
@@ -66,6 +83,32 @@ def update_quest(
     quest = get_owned_quest(quest_id, db, user)
     for field, value in quest_in.model_dump(exclude_unset=True).items():
         setattr(quest, field, value)
+    db.commit()
+    db.refresh(quest)
+    return quest
+
+
+@router.post("/{quest_id}/trash", response_model=schemas.QuestOut)
+def trash_quest(
+    quest_id: str,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+):
+    quest = get_owned_quest(quest_id, db, user)
+    quest.archived_at = datetime.now()
+    db.commit()
+    db.refresh(quest)
+    return quest
+
+
+@router.post("/{quest_id}/restore", response_model=schemas.QuestOut)
+def restore_quest(
+    quest_id: str,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+):
+    quest = get_owned_quest(quest_id, db, user)
+    quest.archived_at = None
     db.commit()
     db.refresh(quest)
     return quest

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { getMe, getQuest, getQuests, Quest, QuestDetail } from "@/lib/api";
 import { getCheckpointStatuses, isOverdue } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
+import WeeklyTimeline from "@/components/WeeklyTimeline";
+import Mascot from "@/components/Mascot";
 
 const ACTIVE_QUEST_KEY = "activeQuestId";
 
@@ -52,11 +54,14 @@ export default function DashboardPage() {
     setShowModal(false);
   };
 
+  // レベル/XPは計算だけ裏で続け、表示は止めたまま（ユーザー指示）
   const totalCompleted = questDetails
     .flatMap((q) => q.checkpoints)
     .filter((cp) => cp.completed_at).length;
   const level = Math.floor(totalCompleted / 5) + 1;
   const xp = totalCompleted * 100;
+  void level;
+  void xp;
 
   const activeQuest = questDetails.find((q) => q.id === activeQuestId) ?? null;
   const sortedCheckpoints = activeQuest
@@ -72,7 +77,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-parchment flex items-center justify-center text-amber-800 font-display">
+      <div className="min-h-screen bg-parchment flex items-center justify-center text-[#2D6A4F] font-display">
         読み込み中...
       </div>
     );
@@ -80,21 +85,21 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-parchment">
-      <header className="card-fantasy border-b border-border bg-card/65 backdrop-blur-md">
-        <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 sm:px-8 py-4 flex flex-wrap justify-between items-center gap-2">
+      <header className="bg-[#2D6A4F] h-16 flex items-center">
+        <div className="w-full max-w-2xl lg:max-w-5xl mx-auto px-4 sm:px-8 flex justify-between items-center gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-lg shrink-0 shadow-[0_0_10px_rgba(108,99,255,0.4)]">
+            <span className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg shrink-0">
               📖
             </span>
-            <h1 className="font-display text-lg font-bold text-slate-100">ProgressQuest</h1>
+            <h1 className="font-display text-lg font-bold text-white">ProgressQuest</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-white bg-slate-800 border border-slate-700 rounded-full px-3 py-1 font-display shadow-[0_0_8px_rgba(255,255,255,0.05)]">
-              ⚔️ レベル{level} ・ {xp}XP
-            </span>
+          <div className="flex items-center gap-4">
+            <Link href="/trash" className="text-sm text-white/80 hover:text-white transition">
+              🗑️ ゴミ箱
+            </Link>
             <button
               onClick={handleLogout}
-              className="text-sm text-slate-400 hover:text-danger transition font-display"
+              className="text-sm text-white/80 hover:text-white transition"
             >
               冒険をやめる
             </button>
@@ -102,15 +107,18 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl lg:max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <p className="text-xs text-slate-400">{email}</p>
-          <Link
-            href="/new"
-            className="bg-primary hover:bg-opacity-90 text-white text-xs px-4 py-2 rounded-lg transition font-bold font-display shadow-md"
-          >
-            ＋ 新しいクエストを始める
-          </Link>
+      <main className="max-w-2xl lg:max-w-5xl mx-auto p-4 sm:p-8">
+        <div className="flex justify-between items-center mb-4 gap-2">
+          <p className="text-sm text-[#888888]">{email}</p>
+          {questDetails.length > 0 && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1 h-9 px-3 text-xs rounded-xl bg-[#F5F0E8] text-[#2D6A4F] font-bold hover:opacity-90 transition shrink-0 shadow-neumorphism-sm"
+            >
+              <span className="truncate max-w-[10rem]">📜 {activeQuest?.title ?? "クエストを選ぶ"}</span>
+              <span aria-hidden>▾</span>
+            </button>
+          )}
         </div>
 
         {/* 経験値バー (レベル進行状況) */}
@@ -133,11 +141,11 @@ export default function DashboardPage() {
 
         {/* 進行中のクエストがない場合 */}
         {questDetails.length === 0 && (
-          <div className="card-fantasy rounded-2xl p-8 text-center bg-card/20 border border-border/80">
-            <p className="text-slate-400 mb-4">まだアクティブなクエストがありません。新しい冒険に出かけましょう！</p>
+          <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-8 text-center">
+            <p className="text-[#888888] mb-4">まだクエストがありません。</p>
             <Link
               href="/new"
-              className="inline-block bg-primary hover:bg-opacity-90 text-white px-5 py-2.5 rounded-lg transition font-bold font-display shadow-lg"
+              className="inline-flex items-center justify-center h-12 px-6 rounded-xl bg-[#E9A62A] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
             >
               ＋ クエストを創生する ⚔️
             </Link>
@@ -197,69 +205,88 @@ export default function DashboardPage() {
 
         {/* 進行中のクエストメインビュー */}
         {activeQuest && (
-          <div className="card-fantasy rounded-2xl p-6 bg-card/30 border border-border space-y-6">
-            <div className="flex justify-between items-start gap-4 flex-wrap">
+          <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-5">
+            <h2 className="font-display text-xl font-bold text-[#2C2C2C] mb-1">
+              {activeQuest.title}
+            </h2>
+            {activeQuest.description && (
+              <p className="text-xs text-[#5a5a5a] italic mb-3">「{activeQuest.description}」</p>
+            )}
+
+            <div className="lg:grid lg:grid-cols-2 lg:gap-6">
               <div>
-                <span className="text-[10px] text-primary border border-primary/30 bg-primary/10 rounded-full px-2 py-0.5 font-bold tracking-wider font-display uppercase">
-                  Active Campaign
-                </span>
-                <h2 className="font-display text-xl sm:text-2xl font-bold text-slate-100 mt-1">
-                  {activeQuest.title}
-                </h2>
-                {activeQuest.description && (
-                  <p className="text-xs text-slate-400 italic mt-1 font-serif">「{activeQuest.description}」</p>
-                )}
-              </div>
-              <button
-                onClick={() => setShowModal(true)}
-                className="text-xs text-slate-300 border border-border px-3 py-1.5 bg-slate-800/40 rounded-lg hover:bg-slate-800 transition font-display animate-pulse-slow"
-              >
-                別のクエストに切り替え 🛡️
-              </button>
-            </div>
-
-            <div className="lg:grid lg:grid-cols-2 lg:gap-8 items-center">
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs font-bold text-slate-400 tracking-widest uppercase font-display">
-                      Campaign Progress
-                    </span>
-                    <span className="text-xs font-bold text-success font-display">
-                      {progressPercent.toFixed(0)}% ({completedCount} / {totalCount} 完了)
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-900 rounded-full h-3 border border-border overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-primary via-secondary to-success h-3 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
+                <p className="text-xs font-bold text-[#2D6A4F] tracking-widest uppercase mb-1">
+                  Quest Progress
+                </p>
+                <div className="w-full bg-[#e8e0d0] rounded-full h-3 mb-2 overflow-hidden">
+                  <div
+                    className="h-3 rounded-full transition-all"
+                    style={{
+                      width: `${progressPercent}%`,
+                      background: "linear-gradient(90deg, #2D6A4F, #52B788)",
+                    }}
+                  />
                 </div>
+                <p className="text-xs text-[#888888] mb-4">
+                  {completedCount} / {totalCount} 完了
+                </p>
 
-                {!nextCheckpoint && (
-                  <div className="rounded-xl p-4 bg-success/20 border border-success/40 text-success font-bold text-center font-display">
-                    🏆 このクエストのすべての試練をクリアしました！
+                {nextCheckpoint ? (
+                  <div
+                    className={`rounded-xl p-4 ${
+                      isOverdue(nextCheckpoint.due_date)
+                        ? "bg-[#E05252]/10 text-[#E05252]"
+                        : "bg-[#2D6A4F]/10 text-[#2D6A4F]"
+                    }`}
+                  >
+                    <p className="text-xs font-bold mb-1">
+                      {isOverdue(nextCheckpoint.due_date)
+                        ? "⚠️ 危険：期日超過"
+                        : "⚔️ 次にやるべきこと"}
+                    </p>
+                    <p className="font-bold">{nextCheckpoint.title}</p>
+                    {nextCheckpoint.due_date && (
+                      <p className="text-xs opacity-80 mt-1">期日: {nextCheckpoint.due_date}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="rounded-xl p-4 bg-[#4CAF50]/10 text-[#4CAF50] font-bold text-center">
+                    🏆 クエストクリア！
                   </div>
                 )}
 
                 <Link
                   href={`/quest/${activeQuest.id}`}
-                  className="block text-center bg-primary hover:bg-opacity-90 text-white py-2.5 rounded-lg transition font-bold font-display shadow-md text-sm"
+                  className="flex items-center justify-center h-12 mt-4 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
                 >
                   作戦地図を展開 🗺️
                 </Link>
               </div>
 
               {mapItems.length > 0 && (
-                <div className="bg-slate-900/40 border border-border rounded-xl p-4 mt-4 lg:mt-0 flex justify-center">
+                <div className="bg-[#EEF5EE] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm">
                   <QuestMap items={mapItems} />
                 </div>
               )}
             </div>
           </div>
         )}
+
+        {questDetails.length > 0 && (
+          <div className="mt-6">
+            <WeeklyTimeline quests={questDetails} />
+          </div>
+        )}
       </main>
+
+      <Mascot
+        storageKey="dashboard"
+        steps={[
+          "ようこそ、冒険者！ここProgressQuestは、目標をRPGのクエストのように管理できる場所だよ。",
+          "「クエストを切り替える」からいつでも別の目標に切り替えられるし、まずは新しいクエストを作ってみよう。",
+          "「📅 今週のタスク」では、複数のクエストをまとめて今週やるべきことが見えるよ。困ったらまたここに相談してね！",
+        ]}
+      />
 
       {showModal && (
         <div
@@ -267,10 +294,10 @@ export default function DashboardPage() {
           onClick={() => setShowModal(false)}
         >
           <div
-            className="card-fantasy rounded-2xl p-6 w-full max-w-sm max-h-[80vh] overflow-y-auto bg-card/95 border border-border"
+            className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-5 w-full max-w-sm max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-display text-lg font-bold mb-4 text-slate-100">
+            <h3 className="font-display text-lg font-bold mb-4 text-[#2C2C2C]">
               クエストを選ぶ
             </h3>
             <div className="space-y-2 mb-4">
@@ -278,10 +305,10 @@ export default function DashboardPage() {
                 <button
                   key={q.id}
                   onClick={() => handleSelectQuest(q.id)}
-                  className={`w-full text-left px-4 py-3 rounded-lg border transition text-sm font-display ${
+                  className={`w-full text-left px-4 py-3 rounded-xl transition ${
                     q.id === activeQuestId
-                      ? "bg-primary/20 border-primary font-bold text-primary shadow-[0_0_8px_rgba(108,99,255,0.2)]"
-                      : "bg-slate-800/40 border-border hover:bg-slate-800 text-slate-300"
+                      ? "bg-[#2D6A4F]/10 font-bold text-[#2D6A4F] shadow-neumorphism-inset"
+                      : "bg-[#F5F0E8] text-[#2C2C2C] shadow-neumorphism-sm hover:opacity-90"
                   }`}
                 >
                   {q.title}
@@ -290,7 +317,7 @@ export default function DashboardPage() {
             </div>
             <Link
               href="/new"
-              className="block text-center bg-primary hover:bg-opacity-90 text-white py-2.5 rounded-lg transition font-bold font-display shadow-md text-sm"
+              className="flex items-center justify-center h-12 rounded-xl bg-[#E9A62A] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
             >
               ＋ 新しいクエストを始める
             </Link>
