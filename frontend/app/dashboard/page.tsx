@@ -5,6 +5,8 @@ import Link from "next/link";
 import { getMe, getQuest, getQuests, Quest, QuestDetail } from "@/lib/api";
 import { getCheckpointStatuses, isOverdue } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
+import WeeklyTimeline from "@/components/WeeklyTimeline";
+import Mascot from "@/components/Mascot";
 
 const ACTIVE_QUEST_KEY = "activeQuestId";
 
@@ -198,7 +200,22 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {questDetails.length > 0 && (
+          <div className="mt-6">
+            <WeeklyTimeline quests={questDetails} />
+          </div>
+        )}
       </main>
+
+      <Mascot
+        storageKey="dashboard"
+        steps={[
+          "ようこそ、冒険者！ここProgressQuestは、目標をRPGのクエストのように管理できる場所だよ。",
+          "「クエストを切り替える」からいつでも別の目標に切り替えられるし、まずは新しいクエストを作ってみよう。",
+          "「📅 今週のタスク」では、複数のクエストをまとめて今週やるべきことが見えるよ。困ったらまたここに相談してね！",
+        ]}
+      />
 
       {showModal && (
         <div

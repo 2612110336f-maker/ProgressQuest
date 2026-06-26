@@ -12,6 +12,7 @@ import {
   proposeDeadline,
 } from "@/lib/api";
 import QuestLoading from "@/components/QuestLoading";
+import Mascot from "@/components/Mascot";
 
 type Step =
   | "choose"
@@ -473,6 +474,14 @@ export default function NewQuestPage() {
         )}
       </div>
       </div>
+
+      <Mascot
+        storageKey="new"
+        steps={[
+          "クエストの作り方は2つあるよ。「AIで作る」を選ぶと、目標と期日からAIが診断してロードマップまで自動で作ってくれる。",
+          "急いでいるときや、自分でしっかり計画を立てたいときは「手動で作る」を選んでね。あとからチェックポイントも追加できるよ。",
+        ]}
+      />
     </div>
   );
 }

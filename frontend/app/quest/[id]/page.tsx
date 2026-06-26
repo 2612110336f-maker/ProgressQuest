@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { getCheckpointStatuses } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
+import Mascot from "@/components/Mascot";
 
 type Tab = "map" | "list";
 
@@ -335,6 +336,14 @@ export default function QuestDetailPage() {
           </div>
         </div>
       )}
+
+      <Mascot
+        storageKey="quest_detail"
+        steps={[
+          "🗺️「マップ」タブでは、すごろく風にクエストの道のりが見えるよ。今いる場所が⚔️マークでわかるんだ。",
+          "📋「一覧」タブでは、チェックポイントの追加・削除や、詳細の確認ができるよ。両方使い分けてみてね！",
+        ]}
+      />
     </div>
   );
 }
