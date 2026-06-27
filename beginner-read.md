@@ -29,11 +29,19 @@ cd hack-teamD   # クローンしたフォルダ名に合わせてください
 ```bash
 # backendフォルダに移動
 cd backend
+#環境変数を設定するためのファイルを作成する
+touch .env
+SECRET_KEY=supersecretkey1234567890abcdef
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+GEMINI_API_KEY= Google AI Studioで自分で取得してきたものをかく
 
 # Python仮想環境を作成（初回のみ）
 python3 -m venv venv
 
 # 仮想環境を有効化
+source venv/bin/activate
 ```
 
 > ✅ ターミナルの先頭に `(venv)` と表示されれば成功です
