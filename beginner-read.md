@@ -51,6 +51,11 @@ source venv/bin/activate
 pip install fastapi uvicorn "python-jose[cryptography]" "passlib[bcrypt]" python-dotenv sqlalchemy "bcrypt==3.2.2"
 ```
 
+```bash
+#よくわからんけどこれもいるっぽい。上手くいかなかったら実行して
+pip install -r requirements.txt
+```
+
 ---
 
 ## 3. バックエンドを起動する
