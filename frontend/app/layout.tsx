@@ -1,21 +1,36 @@
 import type { Metadata } from "next";
-import { Cinzel, Inter, Noto_Serif_JP } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const cinzel = Cinzel({
-  variable: "--font-cinzel",
-  subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const notoSerifJP = Noto_Serif_JP({
-  variable: "--font-noto-serif-jp",
-  weight: ["400", "600", "700", "900"],
-  subsets: ["latin"],
+const zenMaruGothic = localFont({
+  src: [
+    {
+      path: "../public/fonts/ZenMaruGothic-Light.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/ZenMaruGothic-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/ZenMaruGothic-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/ZenMaruGothic-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/ZenMaruGothic-Black.ttf",
+      weight: "900",
+      style: "normal",
+    },
+  ],
+  variable: "--font-zen-maru-gothic",
 });
 
 export const metadata: Metadata = {
@@ -31,7 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${cinzel.variable} ${inter.variable} ${notoSerifJP.variable} h-full antialiased`}
+      className={`${zenMaruGothic.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

@@ -8,16 +8,19 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-display: var(--font-cinzel);
-  --font-serif-jp: var(--font-noto-serif-jp);
+  --font-display: var(--font-zen-maru-gothic);
+  --font-serif-jp: var(--font-zen-maru-gothic);
+  --font-zen-maru-gothic: var(--font-zen-maru-gothic);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  /* Inter covers Latin glyphs; characters it doesn't have (Japanese) fall
-     through to Noto Serif JP automatically, per-glyph. */
-  font-family: var(--font-inter), var(--font-noto-serif-jp), sans-serif;
+  font-family: var(--font-zen-maru-gothic), sans-serif;
+}
+
+button, input, textarea, select {
+  font-family: var(--font-zen-maru-gothic), sans-serif;
 }
 
 input, textarea {
@@ -30,7 +33,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .font-display {
-  font-family: var(--font-cinzel), serif;
+  font-family: var(--font-zen-maru-gothic), sans-serif;
 }
 
 .bg-parchment {
