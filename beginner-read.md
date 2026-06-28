@@ -37,7 +37,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 GEMINI_API_KEY= Google AI Studioで自分で取得してきたものをかく
 
-# Python仮想環境を作成（初回のみ）
+# Python仮想環境を作成（初回のみー何かしらエラーが出た場合はこちら以降再度全てのコマンドを上から打っていってください）
 python3 -m venv venv
 
 # 仮想環境を有効化
@@ -124,3 +124,10 @@ npm run dev
 | ブラウザに何も表示されない | バックエンドとフロントエンド両方が起動しているか確認 |
 
 困ったらAIに聞いてください
+
+## エラーが発生した場合
+データベースの再構成
+rm -f backend/progressquest.db
+
+ライブラリの再インストール
+pip install -r requirements.txt
