@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { login, register } from "@/lib/api";
 
 export default function LoginPage() {
@@ -27,8 +28,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-parchment p-4">
       <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-8 w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-[#2D6A4F] flex items-center justify-center text-2xl mb-3 shadow-neumorphism-sm">
-            📖
+          <div className="w-14 h-14 rounded-2xl overflow-hidden mb-3 shadow-neumorphism-sm">
+            <Image src="/icon-source.png" alt="ProgressQuest" width={56} height={56} className="w-full h-full object-cover" />
           </div>
           <h1 className="font-display text-2xl font-bold text-[#2D6A4F] tracking-wide">
             ProgressQuest

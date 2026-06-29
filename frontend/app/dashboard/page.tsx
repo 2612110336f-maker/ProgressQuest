@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getMe, getQuest, getQuests, Quest, QuestDetail } from "@/lib/api";
 import { getCheckpointStatuses, isOverdue } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
@@ -88,8 +89,8 @@ export default function DashboardPage() {
       <header className="bg-[#2D6A4F] h-16 flex items-center">
         <div className="w-full max-w-2xl lg:max-w-5xl mx-auto px-4 sm:px-8 flex justify-between items-center gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg shrink-0">
-              📖
+            <span className="w-9 h-9 rounded-xl overflow-hidden shrink-0">
+              <Image src="/icon-source.png" alt="ProgressQuest" width={36} height={36} className="w-full h-full object-cover" />
             </span>
             <h1 className="font-display text-lg font-bold text-white">ProgressQuest</h1>
           </div>
