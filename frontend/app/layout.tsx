@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 const zenMaruGothic = localFont({
   src: [
@@ -36,6 +38,20 @@ const zenMaruGothic = localFont({
 export const metadata: Metadata = {
   title: "ProgressQuest",
   description: "目標達成をRPGのクエストのように体験できるアプリ",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ProgressQuest",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2D6A4F",
 };
 
 export default function RootLayout({
@@ -48,7 +64,11 @@ export default function RootLayout({
       lang="ja"
       className={`${zenMaruGothic.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ServiceWorkerRegister />
+        {children}
+        <InstallPrompt />
+      </body>
     </html>
   );
 }
