@@ -1,12 +1,32 @@
+"use client";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type TouchEvent as ReactTouchEvent,
+  type TouchList as ReactTouchList,
+  type WheelEvent as ReactWheelEvent,
+} from "react";
 import { StatusItem } from "@/lib/questStatus";
 
-const VIEW_WIDTH = 1451;
+const VIEW_WIDTH = 459;
 const VIEW_HEIGHT = 816;
 
-const NODE_RADIUS = 28;
-const PUCK_DEPTH = 7;
-const LABEL_WIDTH = 130;
-const LABEL_HEIGHT = 30;
+const NODE_RADIUS = 20;
+const CURRENT_NODE_RADIUS = 28;
+const PUCK_DEPTH = 5;
+const LABEL_WIDTH = 150;
+const LABEL_HEIGHT = 42;
+const CURRENT_LABEL_WIDTH = 180;
+const CURRENT_LABEL_HEIGHT = 50;
+const MAP_PADDING_X = LABEL_WIDTH / 2 + 10;
+const MAP_PADDING_Y = 72;
+const FOCUS_VIEW_WIDTH = 340;
+const FOCUS_VIEW_HEIGHT = 430;
+const MIN_VIEW_WIDTH = 140;
+const MIN_VIEW_HEIGHT = 180;
 
 type PuckColors = { top: string; base: string; icon: string };
 
@@ -66,40 +86,67 @@ function Puck({
 
 type Props = {
   items: StatusItem[];
+  viewMode?: "full" | "focus-current";
+  interactive?: boolean;
 };
 
-export default function QuestMap({ items }: Props) {
+type ViewBox = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+const clamp = (value: number, min: number, max: number) => {
+  return Math.min(Math.max(value, min), max);
+};
+
+const clampViewBox = (box: ViewBox): ViewBox => {
+  const width = clamp(box.width, MIN_VIEW_WIDTH, VIEW_WIDTH);
+  const height = clamp(box.height, MIN_VIEW_HEIGHT, VIEW_HEIGHT);
+
+  return {
+    x: clamp(box.x, 0, VIEW_WIDTH - width),
+    y: clamp(box.y, 0, VIEW_HEIGHT - height),
+    width,
+    height,
+  };
+};
+
+export default function QuestMap({ items, viewMode = "full", interactive = false }: Props) {
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const panRef = useRef<{ clientX: number; clientY: number; viewBox: ViewBox } | null>(null);
+  const pinchRef = useRef<{ distance: number; viewBox: ViewBox } | null>(null);
   const count = items.length;
 
-  // 右下 (X: 1300, Y: 700付近) から左上 (X: 150, Y: 150付近) へ大まかに進む座標テンプレート
-  // アイテム数(count)に応じて、ここから座標を割り当てます。
-  // 必要に応じて座標の数値を微調整してください。
-  const basePositions = [
-    { x: 1250, y: 680 }, // 1つ目のノード (右下付近)
-    { x: 1100, y: 550 },
-    { x: 950,  y: 620 },
-    { x: 800,  y: 480 },
-    { x: 680,  y: 530 },
-    { x: 550,  y: 380 },
-    { x: 420,  y: 420 },
-    { x: 300,  y: 280 }, // Nつ目のノード (左上へ向かう途中)
-  ];
+  // スタート地点（下端）
+  const startX = 150;
+  const startY = 730;
 
-  // スタート地点（右下端）
-  const startX = 1350;
-  const startY = 740;
+  // ゴール地点（上端）
+  const goalX = 70;
+  const goalY = 70;
 
-  // ゴール地点（左上端）
-  const goalX = 150;
-  const goalY = 150;
+  const getNodePosition = (index: number) => {
+    const progress = (index + 1) / (count + 1);
+    const minX = MAP_PADDING_X;
+    const maxX = VIEW_WIDTH - MAP_PADDING_X;
+    const minY = MAP_PADDING_Y;
+    const maxY = VIEW_HEIGHT - MAP_PADDING_Y;
+    const centerX = VIEW_WIDTH / 2;
+    const amplitude = Math.max(70, Math.min(135, 175 - count * 7));
+    const waveCount = count <= 4 ? 2.5 : count <= 8 ? 3.5 : 4.5;
+    const x = centerX + Math.sin(progress * Math.PI * waveCount - Math.PI / 2) * amplitude;
+    const y = startY + (goalY - startY) * progress;
 
-  // 動的に生成されたノードに手動の座標をマッピング
-  const nodes = items.map((item, i) => {
-    // テンプレート座標が足りない場合は、最後の座標から左上に向けて等間隔で補間
-    const pos = basePositions[i] || {
-      x: Math.max(goalX, 300 - (i - basePositions.length) * 80),
-      y: Math.max(goalY, 280 - (i - basePositions.length) * 60)
+    return {
+      x: Math.round(clamp(x, minX, maxX)),
+      y: Math.round(clamp(y, minY, maxY)),
     };
+  };
+
+  const nodes = items.map((item, i) => {
+    const pos = getNodePosition(i);
     return {
       ...item,
       x: pos.x,
@@ -115,17 +162,194 @@ export default function QuestMap({ items }: Props) {
   ];
 
   const allCompleted = count > 0 && nodes.every((n) => n.status === "completed");
+  const focusNode =
+    nodes.find((n) => n.status === "current") ??
+    nodes.find((n) => n.status === "overdue") ??
+    nodes.find((n) => !n.checkpoint.completed_at);
+  const initialViewBox =
+    viewMode === "focus-current" && focusNode
+      ? {
+          x: clamp(focusNode.x - FOCUS_VIEW_WIDTH / 2, 0, VIEW_WIDTH - FOCUS_VIEW_WIDTH),
+          y: clamp(focusNode.y - FOCUS_VIEW_HEIGHT / 2, 0, VIEW_HEIGHT - FOCUS_VIEW_HEIGHT),
+          width: FOCUS_VIEW_WIDTH,
+          height: FOCUS_VIEW_HEIGHT,
+        }
+      : {
+          x: 0,
+          y: 0,
+          width: VIEW_WIDTH,
+          height: VIEW_HEIGHT,
+        };
+  const [viewBox, setViewBox] = useState<ViewBox>(initialViewBox);
+  const activeViewBox = interactive ? viewBox : initialViewBox;
+
+  useEffect(() => {
+    setViewBox(initialViewBox);
+  }, [initialViewBox.x, initialViewBox.y, initialViewBox.width, initialViewBox.height]);
 
   const segmentCompleted = (segmentIndex: number) => {
     if (segmentIndex === count) return allCompleted;
     return nodes[segmentIndex]?.status === "completed";
   };
 
+  const getSvgPoint = (clientX: number, clientY: number, box: ViewBox = activeViewBox) => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return { x: box.x, y: box.y };
+
+    return {
+      x: box.x + ((clientX - rect.left) / rect.width) * box.width,
+      y: box.y + ((clientY - rect.top) / rect.height) * box.height,
+    };
+  };
+
+  const zoomAt = (clientX: number, clientY: number, scale: number) => {
+    setViewBox((current) => {
+      const minScale = Math.max(MIN_VIEW_WIDTH / current.width, MIN_VIEW_HEIGHT / current.height);
+      const maxScale = Math.min(VIEW_WIDTH / current.width, VIEW_HEIGHT / current.height);
+      const nextScale = clamp(scale, minScale, maxScale);
+      const anchor = getSvgPoint(clientX, clientY, current);
+      const width = current.width * nextScale;
+      const height = current.height * nextScale;
+      const ratioX = (anchor.x - current.x) / current.width;
+      const ratioY = (anchor.y - current.y) / current.height;
+
+      return clampViewBox({
+        x: anchor.x - width * ratioX,
+        y: anchor.y - height * ratioY,
+        width,
+        height,
+      });
+    });
+  };
+
+  const handleWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
+    if (!interactive) return;
+    event.preventDefault();
+    zoomAt(event.clientX, event.clientY, event.deltaY > 0 ? 1.12 : 0.88);
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!interactive || event.pointerType === "touch") return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    panRef.current = {
+      clientX: event.clientX,
+      clientY: event.clientY,
+      viewBox: activeViewBox,
+    };
+  };
+
+  const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!interactive || !panRef.current) return;
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const dx = ((event.clientX - panRef.current.clientX) / rect.width) * panRef.current.viewBox.width;
+    const dy = ((event.clientY - panRef.current.clientY) / rect.height) * panRef.current.viewBox.height;
+    setViewBox(
+      clampViewBox({
+        ...panRef.current.viewBox,
+        x: panRef.current.viewBox.x - dx,
+        y: panRef.current.viewBox.y - dy,
+      })
+    );
+  };
+
+  const handlePointerUp = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!interactive) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    panRef.current = null;
+  };
+
+  const getTouchDistance = (touches: ReactTouchList) => {
+    const first = touches.item(0);
+    const second = touches.item(1);
+    if (!first || !second) return 0;
+
+    return Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+  };
+
+  const getTouchCenter = (touches: ReactTouchList) => {
+    const first = touches.item(0);
+    const second = touches.item(1);
+    if (!first || !second) return null;
+
+    return {
+      x: (first.clientX + second.clientX) / 2,
+      y: (first.clientY + second.clientY) / 2,
+    };
+  };
+
+  const handleTouchStart = (event: ReactTouchEvent<SVGSVGElement>) => {
+    if (!interactive) return;
+    if (event.touches.length === 1) {
+      const touch = event.touches.item(0);
+      if (!touch) return;
+      panRef.current = {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        viewBox: activeViewBox,
+      };
+      pinchRef.current = null;
+    } else if (event.touches.length === 2) {
+      pinchRef.current = {
+        distance: getTouchDistance(event.touches),
+        viewBox: activeViewBox,
+      };
+      panRef.current = null;
+    }
+  };
+
+  const handleTouchMove = (event: ReactTouchEvent<SVGSVGElement>) => {
+    if (!interactive) return;
+    event.preventDefault();
+
+    if (event.touches.length === 1 && panRef.current) {
+      const touch = event.touches.item(0);
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!touch || !rect) return;
+
+      const dx = ((touch.clientX - panRef.current.clientX) / rect.width) * panRef.current.viewBox.width;
+      const dy = ((touch.clientY - panRef.current.clientY) / rect.height) * panRef.current.viewBox.height;
+      setViewBox(
+        clampViewBox({
+          ...panRef.current.viewBox,
+          x: panRef.current.viewBox.x - dx,
+          y: panRef.current.viewBox.y - dy,
+        })
+      );
+    } else if (event.touches.length === 2 && pinchRef.current) {
+      const distance = getTouchDistance(event.touches);
+      const center = getTouchCenter(event.touches);
+      if (!distance || !center) return;
+      zoomAt(center.x, center.y, pinchRef.current.distance / distance);
+      pinchRef.current.distance = distance;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    panRef.current = null;
+    pinchRef.current = null;
+  };
+
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full overflow-hidden">
       <svg
-        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
-        className="min-w-[1000px] w-full h-auto"
+        ref={svgRef}
+        viewBox={`${activeViewBox.x} ${activeViewBox.y} ${activeViewBox.width} ${activeViewBox.height}`}
+        className={`${viewMode === "focus-current" ? "w-full" : "min-w-[260px] w-full"} h-auto ${
+          interactive ? "cursor-grab touch-none select-none active:cursor-grabbing" : ""
+        }`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         <defs>
           <filter id="node-shadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -135,7 +359,7 @@ export default function QuestMap({ items }: Props) {
 
         {/* 背景地図画像 */}
         <image
-          href="/001.png"
+          href="/mapBackground-1.png"
           x={0}
           y={0}
           width={VIEW_WIDTH}
@@ -186,27 +410,40 @@ export default function QuestMap({ items }: Props) {
         {/* 各チェックポイントノード */}
         {nodes.map((node) => {
           const colors = nodeColor[node.status];
-          // ラベルはノードの少し上に表示（左右ジグザグではなくなったため）
-          const labelX = node.x - LABEL_WIDTH / 2;
-          const labelY = node.y - NODE_RADIUS - 30;
+          const isCurrent = node.status === "current";
+          const nodeRadius = isCurrent ? CURRENT_NODE_RADIUS : NODE_RADIUS;
+          const labelWidth = isCurrent ? CURRENT_LABEL_WIDTH : LABEL_WIDTH;
+          const labelHeight = isCurrent ? CURRENT_LABEL_HEIGHT : LABEL_HEIGHT;
+          const labelX = node.x - labelWidth / 2;
+          const labelY = node.y - nodeRadius - labelHeight - 8;
           return (
             <g key={node.checkpoint.id}>
               <Puck
                 x={node.x}
                 y={node.y}
-                r={NODE_RADIUS}
+                r={nodeRadius}
                 colors={colors}
                 icon={nodeIcon[node.status]}
-                ringed={node.status === "current"}
+                iconSize={isCurrent ? 24 : 18}
+                ringed={isCurrent}
               />
               <foreignObject
                 x={labelX}
                 y={labelY}
-                width={LABEL_WIDTH}
-                height={LABEL_HEIGHT}
+                width={labelWidth}
+                height={labelHeight}
               >
-                <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-amber-900/10 h-full flex items-center justify-center px-2 py-0.5 text-xs font-bold text-[#2C2C2C]">
-                  <span className="truncate">{node.checkpoint.title}</span>
+                <div
+                  title={node.checkpoint.title}
+                  className={`bg-white/95 backdrop-blur-sm rounded-lg shadow-md h-full flex items-center justify-center px-2 py-1 leading-tight font-bold text-[#2C2C2C] ${
+                    isCurrent
+                      ? "border-2 border-[#1cb0f6] text-xs"
+                      : "border border-amber-900/10 text-[10px]"
+                  }`}
+                >
+                  <span className="overflow-hidden text-center [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                    {node.checkpoint.title}
+                  </span>
                 </div>
               </foreignObject>
             </g>

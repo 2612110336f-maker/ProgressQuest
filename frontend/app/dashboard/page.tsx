@@ -194,8 +194,8 @@ export default function DashboardPage() {
               </div>
 
               {mapItems.length > 0 && (
-                <div className="bg-[#EEF5EE] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm">
-                  <QuestMap items={mapItems} />
+                <div className="bg-[#EEF5EE] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm max-h-[75vh] overflow-auto">
+                  <QuestMap items={mapItems} viewMode="focus-current" interactive />
                 </div>
               )}
             </div>

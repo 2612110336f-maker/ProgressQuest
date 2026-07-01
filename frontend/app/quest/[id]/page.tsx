@@ -160,8 +160,8 @@ export default function QuestDetailPage() {
 
         {tab === "map" && (
           <div>
-            <div className="bg-[#EEF5EE] rounded-2xl p-2 max-w-xs mx-auto overflow-x-auto">
-              <QuestMap items={items} />
+            <div className="bg-[#EEF5EE] rounded-2xl p-2 max-w-xs mx-auto max-h-[75vh] overflow-auto">
+              <QuestMap items={items} interactive />
             </div>
 
             {items.length === 0 && (
