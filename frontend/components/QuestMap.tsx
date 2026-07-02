@@ -407,9 +407,24 @@ export default function QuestMap({ items, viewMode = "full", interactive = false
           スタート
         </text>
 
-        {/* 各チェックポイントノード */}
+        {/* 各チェックポイントノード（Puckを先に全描画してラベルが必ず上に来るようにする） */}
         {nodes.map((node) => {
-          const colors = nodeColor[node.status];
+          const isCurrent = node.status === "current";
+          const nodeRadius = isCurrent ? CURRENT_NODE_RADIUS : NODE_RADIUS;
+          return (
+            <Puck
+              key={`puck-${node.checkpoint.id}`}
+              x={node.x}
+              y={node.y}
+              r={nodeRadius}
+              colors={nodeColor[node.status]}
+              icon={nodeIcon[node.status]}
+              iconSize={isCurrent ? 24 : 18}
+              ringed={isCurrent}
+            />
+          );
+        })}
+        {nodes.map((node) => {
           const isCurrent = node.status === "current";
           const nodeRadius = isCurrent ? CURRENT_NODE_RADIUS : NODE_RADIUS;
           const labelWidth = isCurrent ? CURRENT_LABEL_WIDTH : LABEL_WIDTH;
@@ -417,36 +432,26 @@ export default function QuestMap({ items, viewMode = "full", interactive = false
           const labelX = node.x - labelWidth / 2;
           const labelY = node.y - nodeRadius - labelHeight - 8;
           return (
-            <g key={node.checkpoint.id}>
-              <Puck
-                x={node.x}
-                y={node.y}
-                r={nodeRadius}
-                colors={colors}
-                icon={nodeIcon[node.status]}
-                iconSize={isCurrent ? 24 : 18}
-                ringed={isCurrent}
-              />
-              <foreignObject
-                x={labelX}
-                y={labelY}
-                width={labelWidth}
-                height={labelHeight}
+            <foreignObject
+              key={`label-${node.checkpoint.id}`}
+              x={labelX}
+              y={labelY}
+              width={labelWidth}
+              height={labelHeight}
+            >
+              <div
+                title={node.checkpoint.title}
+                className={`bg-white/95 backdrop-blur-sm rounded-lg shadow-md h-full flex items-center justify-center px-2 py-1 leading-tight font-bold text-[#2C2C2C] ${
+                  isCurrent
+                    ? "border-2 border-[#1cb0f6] text-xs"
+                    : "border border-amber-900/10 text-[10px]"
+                }`}
               >
-                <div
-                  title={node.checkpoint.title}
-                  className={`bg-white/95 backdrop-blur-sm rounded-lg shadow-md h-full flex items-center justify-center px-2 py-1 leading-tight font-bold text-[#2C2C2C] ${
-                    isCurrent
-                      ? "border-2 border-[#1cb0f6] text-xs"
-                      : "border border-amber-900/10 text-[10px]"
-                  }`}
-                >
-                  <span className="overflow-hidden text-center [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-                    {node.checkpoint.title}
-                  </span>
-                </div>
-              </foreignObject>
-            </g>
+                <span className="overflow-hidden text-center [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                  {node.checkpoint.title}
+                </span>
+              </div>
+            </foreignObject>
           );
         })}
 
