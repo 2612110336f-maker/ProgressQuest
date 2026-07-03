@@ -197,6 +197,11 @@ export default function QuestDetailPage() {
                     期日: {current.checkpoint.due_date}
                   </p>
                 )}
+                {current.checkpoint.estimated_hours != null && (
+                  <p className="text-xs text-[#E9A62A] font-bold mt-1">
+                    ⏱ 目安{current.checkpoint.estimated_hours}時間
+                  </p>
+                )}
                 <button
                   onClick={() => handleToggleComplete(current.checkpoint)}
                   className="flex items-center justify-center h-12 w-full mt-3 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
@@ -275,6 +280,11 @@ export default function QuestDetailPage() {
                           {checkpoint.description && (
                             <p className="text-xs text-[#5a5a5a] mt-0.5">
                               {checkpoint.description}
+                            </p>
+                          )}
+                          {checkpoint.estimated_hours != null && (
+                            <p className="text-xs text-[#E9A62A] font-bold mt-0.5">
+                              ⏱ 目安{checkpoint.estimated_hours}時間
                             </p>
                           )}
                         </div>

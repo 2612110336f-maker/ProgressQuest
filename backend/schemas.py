@@ -22,6 +22,7 @@ class CheckpointCreate(BaseModel):
     description: Optional[str] = None
     due_date: Optional[date] = None
     order_index: Optional[int] = None
+    estimated_hours: Optional[int] = None
 
 class CheckpointUpdate(BaseModel):
     title: Optional[str] = None
@@ -29,6 +30,7 @@ class CheckpointUpdate(BaseModel):
     due_date: Optional[date] = None
     order_index: Optional[int] = None
     completed: Optional[bool] = None
+    estimated_hours: Optional[int] = None
 
 class CheckpointOut(BaseModel):
     id: str
@@ -38,6 +40,7 @@ class CheckpointOut(BaseModel):
     due_date: Optional[date] = None
     completed_at: Optional[datetime] = None
     order_index: Optional[int] = None
+    estimated_hours: Optional[int] = None
 
     class Config:
         from_attributes = True

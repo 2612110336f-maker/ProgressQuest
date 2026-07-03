@@ -166,6 +166,7 @@ export default function NewQuestPage() {
           description: cp.description,
           due_date: cp.due_date,
           order_index: cp.order_index,
+          estimated_hours: cp.estimated_hours,
         });
       }
       router.push(`/quest/${quest.id}`);
@@ -463,7 +464,10 @@ export default function NewQuestPage() {
                     {cp.order_index}. {cp.title}
                   </p>
                   <p className="text-xs text-[#5a5a5a] mt-0.5">{cp.description}</p>
-                  <p className="text-xs text-[#2D6A4F] mt-1">期日: {cp.due_date}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-xs text-[#2D6A4F]">期日: {cp.due_date}</p>
+                    <p className="text-xs text-[#E9A62A] font-bold">⏱ 目安{cp.estimated_hours}時間</p>
+                  </div>
                 </div>
               ))}
             </div>
