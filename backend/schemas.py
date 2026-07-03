@@ -110,5 +110,10 @@ class RoadmapCheckpoint(BaseModel):
     due_date: date
     order_index: int
 
+    estimated_hours: int
+
+    deliverable: str
+
+
 class GenerateRoadmapResponse(BaseModel):
     checkpoints: list[RoadmapCheckpoint]
