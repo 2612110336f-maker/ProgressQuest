@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -25,6 +25,8 @@ const ACTIVE_QUEST_KEY = "activeQuestId";
 export default function DashboardPage() {
   const router = useRouter();
   const { theme, toggle } = useTheme();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
   const [questDetails, setQuestDetails] = useState<QuestDetail[]>([]);
   const [activeQuestId, setActiveQuestId] = useState<string | null>(null);
@@ -49,6 +51,16 @@ export default function DashboardPage() {
     setActiveQuestId(validId);
     if (validId) localStorage.setItem(ACTIVE_QUEST_KEY, validId);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -155,29 +167,46 @@ export default function DashboardPage() {
             </span>
             <h1 className="font-display text-lg font-bold text-white">ProgressQuest</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div ref={menuRef} className="relative">
             <button
-              onClick={handleOpenLineModal}
-              className="text-sm text-white/80 hover:text-white transition"
+              onClick={() => setShowMenu((v) => !v)}
+              className="w-9 h-9 flex flex-col items-center justify-center gap-1.5 text-white/80 hover:text-white transition"
+              aria-label="メニュー"
             >
-              {lineLinked ? "🔔 LINE連携済み" : "🔔 LINE通知"}
+              <span className="block w-5 h-0.5 bg-current rounded" />
+              <span className="block w-5 h-0.5 bg-current rounded" />
+              <span className="block w-5 h-0.5 bg-current rounded" />
             </button>
-            <Link href="/trash" className="text-sm text-white/80 hover:text-white transition">
-              🏆 クリア済み
-            </Link>
-            <button
-              onClick={toggle}
-              className="text-sm text-white/80 hover:text-white transition"
-              title={theme === "fantasy" ? "シンプルモードに切り替え" : "ファンタジーモードに切り替え"}
-            >
-              {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
-            </button>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-white/80 hover:text-white transition"
-            >
-              ログアウト
-            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-2 w-44 bg-[#F5F0E8] rounded-xl shadow-lg overflow-hidden z-50">
+                <button
+                  onClick={() => { handleOpenLineModal(); setShowMenu(false); }}
+                  className="w-full text-left px-4 py-3 text-sm text-[#2C2C2C] hover:bg-[#2D6A4F]/10 transition"
+                >
+                  {lineLinked ? "🔔 LINE連携済み" : "🔔 LINE通知"}
+                </button>
+                <Link
+                  href="/trash"
+                  onClick={() => setShowMenu(false)}
+                  className="block px-4 py-3 text-sm text-[#2C2C2C] hover:bg-[#2D6A4F]/10 transition"
+                >
+                  🏆 クリア済み
+                </Link>
+                <button
+                  onClick={() => { toggle(); setShowMenu(false); }}
+                  className="w-full text-left px-4 py-3 text-sm text-[#2C2C2C] hover:bg-[#2D6A4F]/10 transition"
+                >
+                  {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
+                </button>
+                <div className="border-t border-[#E8E0D0]" />
+                <button
+                  onClick={() => { handleLogout(); setShowMenu(false); }}
+                  className="w-full text-left px-4 py-3 text-sm text-[#E05252] hover:bg-[#E05252]/10 transition"
+                >
+                  ログアウト
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>

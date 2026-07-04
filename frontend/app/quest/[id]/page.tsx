@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -24,6 +24,8 @@ export default function QuestDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { theme, toggle } = useTheme();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const questId = params.id as string;
 
   const [quest, setQuest] = useState<QuestDetail | null>(null);
@@ -46,6 +48,16 @@ export default function QuestDetailPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -131,26 +143,39 @@ export default function QuestDetailPage() {
           <Link href="/dashboard" className="text-sm text-white/80 hover:text-white transition">
             ← ダッシュボードに戻る
           </Link>
-          <div className="flex items-center gap-4">
+          <div ref={menuRef} className="relative">
             <button
-              onClick={toggle}
-              className="text-sm text-white/80 hover:text-white transition"
-              title={theme === "fantasy" ? "シンプルモードに切り替え" : "ファンタジーモードに切り替え"}
+              onClick={() => setShowMenu((v) => !v)}
+              className="w-9 h-9 flex flex-col items-center justify-center gap-1.5 text-white/80 hover:text-white transition"
+              aria-label="メニュー"
             >
-              {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
+              <span className="block w-5 h-0.5 bg-current rounded" />
+              <span className="block w-5 h-0.5 bg-current rounded" />
+              <span className="block w-5 h-0.5 bg-current rounded" />
             </button>
-            <button
-              onClick={handleDeleteQuest}
-              className="text-sm text-white/80 hover:text-white transition"
-            >
-              🗑️ クエスト削除
-            </button>
-            <button
-              onClick={handleTrashQuest}
-              className="text-sm text-white/80 hover:text-white transition"
-            >
-              🏆 クリア済みに入れる
-            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-2 w-44 bg-[#F5F0E8] rounded-xl shadow-lg overflow-hidden z-50">
+                <button
+                  onClick={() => { toggle(); setShowMenu(false); }}
+                  className="w-full text-left px-4 py-3 text-sm text-[#2C2C2C] hover:bg-[#2D6A4F]/10 transition"
+                >
+                  {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
+                </button>
+                <button
+                  onClick={() => { handleTrashQuest(); setShowMenu(false); }}
+                  className="w-full text-left px-4 py-3 text-sm text-[#2C2C2C] hover:bg-[#2D6A4F]/10 transition"
+                >
+                  🏆 クリア済みに入れる
+                </button>
+                <div className="border-t border-[#E8E0D0]" />
+                <button
+                  onClick={() => { handleDeleteQuest(); setShowMenu(false); }}
+                  className="w-full text-left px-4 py-3 text-sm text-[#E05252] hover:bg-[#E05252]/10 transition"
+                >
+                  🗑️ クエスト削除
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
