@@ -120,3 +120,10 @@ class RoadmapCheckpoint(BaseModel):
 
 class GenerateRoadmapResponse(BaseModel):
     checkpoints: list[RoadmapCheckpoint]
+
+class LineStatusOut(BaseModel):
+    linked: bool
+
+class LineLinkCodeOut(BaseModel):
+    code: str
+    linked: bool

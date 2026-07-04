@@ -1,11 +1,12 @@
 import os
+from datetime import date
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, get_db, Base
 import models, schemas, auth
-from routers import quests, checkpoints, ai
+from routers import quests, checkpoints, ai, line
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +28,33 @@ app.add_middleware(
 app.include_router(quests.router)
 app.include_router(checkpoints.router)
 app.include_router(ai.router)
+app.include_router(line.router)
+
+
+def notify_overdue_checkpoints(db_user: models.User, db: Session) -> None:
+    if not db_user.line_user_id:
+        return
+    try:
+        overdue = (
+            db.query(models.Checkpoint)
+            .join(models.Quest)
+            .filter(
+                models.Quest.user_id == db_user.id,
+                models.Checkpoint.completed_at.is_(None),
+                models.Checkpoint.due_date.isnot(None),
+                models.Checkpoint.due_date < date.today(),
+            )
+            .all()
+        )
+        if not overdue:
+            return
+        lines = "\n".join(f"・{cp.title}（期日: {cp.due_date}）" for cp in overdue)
+        line.send_line_message(
+            db_user.line_user_id,
+            f"⚠️ 期日を過ぎたチェックポイントがあります\n{lines}",
+        )
+    except Exception as e:
+        print(f"期日超過チェックの通知に失敗しました: {e}")
 
 @app.post("/auth/register", response_model=schemas.Token)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -46,6 +74,7 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if not db_user or not auth.verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="メールアドレスまたはパスワードが違います")
+    notify_overdue_checkpoints(db_user, db)
     token = auth.create_access_token(data={"sub": db_user.id})
     return {"access_token": token, "token_type": "bearer"}
 

@@ -15,6 +15,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     line_user_id = Column(String, nullable=True)
+    line_link_code = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
 
 class Quest(Base):
