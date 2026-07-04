@@ -13,13 +13,16 @@ import {
 } from "@/lib/api";
 import { getCheckpointStatuses } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
+import QuestMapSimple from "@/components/QuestMapSimple";
 import Mascot from "@/components/Mascot";
+import { useTheme } from "@/lib/theme";
 
 type Tab = "map" | "list";
 
 export default function QuestDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { theme, toggle } = useTheme();
   const questId = params.id as string;
 
   const [quest, setQuest] = useState<QuestDetail | null>(null);
@@ -117,12 +120,21 @@ export default function QuestDetailPage() {
           <Link href="/dashboard" className="text-sm text-white/80 hover:text-white transition">
             ← ダッシュボードに戻る
           </Link>
-          <button
-            onClick={handleTrashQuest}
-            className="text-sm text-white/80 hover:text-white transition"
-          >
-            🗑️ ゴミ箱に入れる
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggle}
+              className="text-sm text-white/80 hover:text-white transition"
+              title={theme === "fantasy" ? "シンプルモードに切り替え" : "ファンタジーモードに切り替え"}
+            >
+              {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
+            </button>
+            <button
+              onClick={handleTrashQuest}
+              className="text-sm text-white/80 hover:text-white transition"
+            >
+              🗑️ ゴミ箱に入れる
+            </button>
+          </div>
         </div>
       </header>
 
@@ -160,8 +172,12 @@ export default function QuestDetailPage() {
 
         {tab === "map" && (
           <div>
-            <div className="bg-[#EEF5EE] rounded-2xl p-2 max-w-xs mx-auto max-h-[75vh] overflow-auto">
-              <QuestMap items={items} interactive />
+            <div className="bg-[#2D6A4F] rounded-2xl p-2 max-w-xs mx-auto max-h-[75vh] overflow-auto">
+              {theme === "fantasy" ? (
+                <QuestMap items={items} interactive />
+              ) : (
+                <QuestMapSimple items={items} />
+              )}
             </div>
 
             {items.length === 0 && (

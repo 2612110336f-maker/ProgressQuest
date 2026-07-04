@@ -6,13 +6,16 @@ import Image from "next/image";
 import { getMe, getQuest, getQuests, Quest, QuestDetail } from "@/lib/api";
 import { getCheckpointStatuses, isOverdue } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
+import QuestMapSimple from "@/components/QuestMapSimple";
 import WeeklyTimeline from "@/components/WeeklyTimeline";
 import Mascot from "@/components/Mascot";
+import { useTheme } from "@/lib/theme";
 
 const ACTIVE_QUEST_KEY = "activeQuestId";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { theme, toggle } = useTheme();
   const [email, setEmail] = useState("");
   const [questDetails, setQuestDetails] = useState<QuestDetail[]>([]);
   const [activeQuestId, setActiveQuestId] = useState<string | null>(null);
@@ -98,6 +101,13 @@ export default function DashboardPage() {
             <Link href="/trash" className="text-sm text-white/80 hover:text-white transition">
               🗑️ ゴミ箱
             </Link>
+            <button
+              onClick={toggle}
+              className="text-sm text-white/80 hover:text-white transition"
+              title={theme === "fantasy" ? "シンプルモードに切り替え" : "ファンタジーモードに切り替え"}
+            >
+              {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
+            </button>
             <button
               onClick={handleLogout}
               className="text-sm text-white/80 hover:text-white transition"
@@ -194,8 +204,12 @@ export default function DashboardPage() {
               </div>
 
               {mapItems.length > 0 && (
-                <div className="bg-[#EEF5EE] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm max-h-[75vh] overflow-auto">
-                  <QuestMap items={mapItems} viewMode="focus-current" interactive />
+                <div className="bg-[#2D6A4F] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm max-h-[75vh] overflow-auto">
+                  {theme === "fantasy" ? (
+                    <QuestMap items={mapItems} viewMode="focus-current" interactive />
+                  ) : (
+                    <QuestMapSimple items={mapItems} />
+                  )}
                 </div>
               )}
             </div>
