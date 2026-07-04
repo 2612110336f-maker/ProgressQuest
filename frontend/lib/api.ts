@@ -1,11 +1,16 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
 });
 
+const getStoredToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("token");
+};
+
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = getStoredToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -23,7 +28,7 @@ export const login = async (email: string, password: string) => {
 };
 
 export const getMe = async (): Promise<{ id: string; email: string }> => {
-  const token = localStorage.getItem("token");
+  const token = getStoredToken();
   const res = await api.get("/auth/me", { params: { token } });
   return res.data;
 };

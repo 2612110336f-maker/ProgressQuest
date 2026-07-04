@@ -7,6 +7,7 @@ import {
   QuestDetail,
   createCheckpoint,
   deleteCheckpoint,
+  deleteQuest,
   getQuest,
   trashQuest,
   updateCheckpoint,
@@ -93,6 +94,16 @@ export default function QuestDetailPage() {
     router.push("/dashboard");
   };
 
+  const handleDeleteQuest = async () => {
+    if (!confirm("このクエストを削除しますか？")) return;
+    try {
+      await deleteQuest(questId);
+      router.push("/dashboard");
+    } catch (e: any) {
+      alert(e.response?.data?.detail || "クエストの削除に失敗しました。");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-parchment flex items-center justify-center text-[#2D6A4F] font-display">
@@ -120,7 +131,6 @@ export default function QuestDetailPage() {
           <Link href="/dashboard" className="text-sm text-white/80 hover:text-white transition">
             ← ダッシュボードに戻る
           </Link>
-
           <div className="flex items-center gap-4">
             <button
               onClick={toggle}
@@ -129,14 +139,19 @@ export default function QuestDetailPage() {
             >
               {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
             </button>
-
-          <button
-            onClick={handleTrashQuest}
-            className="text-sm text-white/80 hover:text-white transition"
-          >
-            🏆 クリア済みに入れる
-          </button>
-
+            <button
+              onClick={handleDeleteQuest}
+              className="text-sm text-white/80 hover:text-white transition"
+            >
+              🗑️ クエスト削除
+            </button>
+            <button
+              onClick={handleTrashQuest}
+              className="text-sm text-white/80 hover:text-white transition"
+            >
+              🏆 クリア済みに入れる
+            </button>
+          </div>
         </div>
       </header>
 
