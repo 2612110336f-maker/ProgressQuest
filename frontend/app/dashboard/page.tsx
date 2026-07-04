@@ -376,16 +376,14 @@ export default function DashboardPage() {
                     </p>
                   )}
                 </div>
-                {process.env.NEXT_PUBLIC_LINE_BASIC_ID && (
-                  <a
-                    href={`https://line.me/R/ti/p/@${process.env.NEXT_PUBLIC_LINE_BASIC_ID}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center h-12 rounded-xl bg-[#06C755] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
-                  >
-                    LINEで友だち追加する
-                  </a>
-                )}
+                <a
+                  href="https://line.me/R/ti/p/@555grfji"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center h-12 rounded-xl bg-[#06C755] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
+                >
+                  LINEで友だち追加する
+                </a>
               </div>
             )}
 
