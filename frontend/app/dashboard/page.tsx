@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   createLineLinkCode,
+  deleteQuest,
   getLineStatus,
   getMe,
   getQuest,
@@ -14,13 +15,16 @@ import {
 } from "@/lib/api";
 import { getCheckpointStatuses, isOverdue } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
+import QuestMapSimple from "@/components/QuestMapSimple";
 import WeeklyTimeline from "@/components/WeeklyTimeline";
 import Mascot from "@/components/Mascot";
+import { useTheme } from "@/lib/theme";
 
 const ACTIVE_QUEST_KEY = "activeQuestId";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { theme, toggle } = useTheme();
   const [email, setEmail] = useState("");
   const [questDetails, setQuestDetails] = useState<QuestDetail[]>([]);
   const [activeQuestId, setActiveQuestId] = useState<string | null>(null);
@@ -32,8 +36,10 @@ export default function DashboardPage() {
   const [lineLoading, setLineLoading] = useState(false);
 
   const load = async () => {
-    const [me, quests] = await Promise.all([getMe(), getQuests()]);
+    const me = await getMe();
     setEmail(me.email);
+
+    const quests = await getQuests();
     const details = await Promise.all(quests.map((q: Quest) => getQuest(q.id)));
     setQuestDetails(details);
 
@@ -51,7 +57,14 @@ export default function DashboardPage() {
       return;
     }
     load()
-      .catch(() => router.push("/login"))
+      .catch((error: unknown) => {
+        if (typeof error === "object" && error !== null && "response" in error) {
+          const response = error.response as { status?: number };
+          if (response.status === 401) {
+            router.push("/login");
+          }
+        }
+      })
       .finally(() => setLoading(false));
     getLineStatus()
       .then((res) => setLineLinked(res.linked))
@@ -81,6 +94,26 @@ export default function DashboardPage() {
     setActiveQuestId(id);
     localStorage.setItem(ACTIVE_QUEST_KEY, id);
     setShowModal(false);
+  };
+
+  const handleDeleteQuest = async (id: string) => {
+    if (!confirm("このクエストを削除しますか？")) return;
+    try {
+      await deleteQuest(id);
+      const updatedDetails = questDetails.filter((q) => q.id !== id);
+      setQuestDetails(updatedDetails);
+      if (activeQuestId === id) {
+        const nextActiveId = updatedDetails[0]?.id ?? null;
+        setActiveQuestId(nextActiveId);
+        if (nextActiveId) {
+          localStorage.setItem(ACTIVE_QUEST_KEY, nextActiveId);
+        } else {
+          localStorage.removeItem(ACTIVE_QUEST_KEY);
+        }
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.detail || "クエストの削除に失敗しました。");
+    }
   };
 
   // レベル/XPは計算だけ裏で続け、表示は止めたまま（ユーザー指示）
@@ -132,6 +165,13 @@ export default function DashboardPage() {
             <Link href="/trash" className="text-sm text-white/80 hover:text-white transition">
               🏆 クリア済み
             </Link>
+            <button
+              onClick={toggle}
+              className="text-sm text-white/80 hover:text-white transition"
+              title={theme === "fantasy" ? "シンプルモードに切り替え" : "ファンタジーモードに切り替え"}
+            >
+              {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
+            </button>
             <button
               onClick={handleLogout}
               className="text-sm text-white/80 hover:text-white transition"
@@ -219,17 +259,29 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <Link
-                  href={`/quest/${activeQuest.id}`}
-                  className="flex items-center justify-center h-12 mt-4 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
-                >
-                  地図を見る
-                </Link>
+                <div className="flex gap-3 mt-4">
+                  <Link
+                    href={`/quest/${activeQuest.id}`}
+                    className="flex-1 flex items-center justify-center h-12 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
+                  >
+                    地図を見る
+                  </Link>
+                  <button
+                    onClick={() => handleDeleteQuest(activeQuest.id)}
+                    className="h-12 px-5 rounded-xl bg-[#E05252] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm text-sm"
+                  >
+                    削除
+                  </button>
+                </div>
               </div>
 
               {mapItems.length > 0 && (
-                <div className="bg-[#EEF5EE] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm">
-                  <QuestMap items={mapItems} />
+                <div className={`bg-[#EEF5EE] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm max-h-[75vh] overflow-auto${theme === "fantasy" ? " border-[3px] border-[#2D6A4F]/50 shadow-[inset_0_0_10px_rgba(45,106,79,0.08),0_4px_16px_rgba(45,106,79,0.18)]" : ""}`}>
+                  {theme === "fantasy" ? (
+                    <QuestMap items={mapItems} viewMode="focus-current" interactive />
+                  ) : (
+                    <QuestMapSimple items={mapItems} />
+                  )}
                 </div>
               )}
             </div>

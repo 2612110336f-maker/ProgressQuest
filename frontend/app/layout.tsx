@@ -1,8 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { Cinzel, Inter, Noto_Serif_JP } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { ThemeProvider } from "@/lib/theme";
+
+const cinzel = Cinzel({ variable: "--font-cinzel", subsets: ["latin"] });
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+const notoSerifJP = Noto_Serif_JP({
+  variable: "--font-noto-serif-jp",
+  weight: ["400", "600", "700", "900"],
+  subsets: ["latin"],
+});
 
 const zenMaruGothic = localFont({
   src: [
@@ -62,11 +72,14 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${zenMaruGothic.variable} h-full antialiased`}
+      className={`${zenMaruGothic.variable} ${cinzel.variable} ${inter.variable} ${notoSerifJP.variable} h-full antialiased`}
+      data-theme="fantasy"
     >
       <body className="min-h-full flex flex-col">
         <ServiceWorkerRegister />
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
         <InstallPrompt />
       </body>
     </html>

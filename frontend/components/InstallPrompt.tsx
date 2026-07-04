@@ -14,8 +14,24 @@ export const InstallPrompt = () => {
   const [deferredEvent, setDeferredEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
+  const getStoredValue = (key: string) => {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  };
+
+  const setStoredValue = (key: string, value: string) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // ignore storage failures on restrictive mobile browsers
+    }
+  };
+
   useEffect(() => {
-    const dismissedAt = localStorage.getItem(DISMISS_KEY);
+    const dismissedAt = getStoredValue(DISMISS_KEY);
     if (dismissedAt) {
       const elapsedDays = (Date.now() - Number(dismissedAt)) / (1000 * 60 * 60 * 24);
       if (elapsedDays < DISMISS_DAYS) return;
@@ -38,13 +54,13 @@ export const InstallPrompt = () => {
     if (outcome === "accepted") {
       setVisible(false);
     } else {
-      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+      setStoredValue(DISMISS_KEY, String(Date.now()));
       setVisible(false);
     }
   };
 
   const handleDismiss = () => {
-    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    setStoredValue(DISMISS_KEY, String(Date.now()));
     setVisible(false);
   };
 

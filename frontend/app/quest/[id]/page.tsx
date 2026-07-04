@@ -7,19 +7,23 @@ import {
   QuestDetail,
   createCheckpoint,
   deleteCheckpoint,
+  deleteQuest,
   getQuest,
   trashQuest,
   updateCheckpoint,
 } from "@/lib/api";
 import { getCheckpointStatuses } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
+import QuestMapSimple from "@/components/QuestMapSimple";
 import Mascot from "@/components/Mascot";
+import { useTheme } from "@/lib/theme";
 
 type Tab = "map" | "list";
 
 export default function QuestDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { theme, toggle } = useTheme();
   const questId = params.id as string;
 
   const [quest, setQuest] = useState<QuestDetail | null>(null);
@@ -90,6 +94,16 @@ export default function QuestDetailPage() {
     router.push("/dashboard");
   };
 
+  const handleDeleteQuest = async () => {
+    if (!confirm("このクエストを削除しますか？")) return;
+    try {
+      await deleteQuest(questId);
+      router.push("/dashboard");
+    } catch (e: any) {
+      alert(e.response?.data?.detail || "クエストの削除に失敗しました。");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-parchment flex items-center justify-center text-[#2D6A4F] font-display">
@@ -117,12 +131,27 @@ export default function QuestDetailPage() {
           <Link href="/dashboard" className="text-sm text-white/80 hover:text-white transition">
             ← ダッシュボードに戻る
           </Link>
-          <button
-            onClick={handleTrashQuest}
-            className="text-sm text-white/80 hover:text-white transition"
-          >
-            🏆 クリア済みに入れる
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggle}
+              className="text-sm text-white/80 hover:text-white transition"
+              title={theme === "fantasy" ? "シンプルモードに切り替え" : "ファンタジーモードに切り替え"}
+            >
+              {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
+            </button>
+            <button
+              onClick={handleDeleteQuest}
+              className="text-sm text-white/80 hover:text-white transition"
+            >
+              🗑️ クエスト削除
+            </button>
+            <button
+              onClick={handleTrashQuest}
+              className="text-sm text-white/80 hover:text-white transition"
+            >
+              🏆 クリア済みに入れる
+            </button>
+          </div>
         </div>
       </header>
 
@@ -160,8 +189,12 @@ export default function QuestDetailPage() {
 
         {tab === "map" && (
           <div>
-            <div className="bg-[#EEF5EE] rounded-2xl p-2 max-w-xs mx-auto overflow-x-auto">
-              <QuestMap items={items} />
+            <div className={`bg-[#EEF5EE] rounded-2xl p-2 max-w-xs mx-auto max-h-[75vh] overflow-auto${theme === "fantasy" ? " border-[3px] border-[#2D6A4F]/50 shadow-[inset_0_0_10px_rgba(45,106,79,0.08),0_4px_16px_rgba(45,106,79,0.18)]" : ""}`}>
+              {theme === "fantasy" ? (
+                <QuestMap items={items} interactive />
+              ) : (
+                <QuestMapSimple items={items} />
+              )}
             </div>
 
             {items.length === 0 && (
