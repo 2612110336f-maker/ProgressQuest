@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { getMe, getQuest, getQuests, Quest, QuestDetail } from "@/lib/api";
+import { getMe, getQuest, getQuests, Quest, QuestDetail, deleteQuest } from "@/lib/api";
 import { getCheckpointStatuses, isOverdue } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
 import WeeklyTimeline from "@/components/WeeklyTimeline";
@@ -20,8 +20,10 @@ export default function DashboardPage() {
   const [showModal, setShowModal] = useState(false);
 
   const load = async () => {
-    const [me, quests] = await Promise.all([getMe(), getQuests()]);
+    const me = await getMe();
     setEmail(me.email);
+
+    const quests = await getQuests();
     const details = await Promise.all(quests.map((q: Quest) => getQuest(q.id)));
     setQuestDetails(details);
 
@@ -39,7 +41,14 @@ export default function DashboardPage() {
       return;
     }
     load()
-      .catch(() => router.push("/login"))
+      .catch((error: unknown) => {
+        if (typeof error === "object" && error !== null && "response" in error) {
+          const response = error.response as { status?: number };
+          if (response.status === 401) {
+            router.push("/login");
+          }
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -53,6 +62,26 @@ export default function DashboardPage() {
     setActiveQuestId(id);
     localStorage.setItem(ACTIVE_QUEST_KEY, id);
     setShowModal(false);
+  };
+
+  const handleDeleteQuest = async (id: string) => {
+    if (!confirm("このクエストを削除しますか？")) return;
+    try {
+      await deleteQuest(id);
+      const updatedDetails = questDetails.filter((q) => q.id !== id);
+      setQuestDetails(updatedDetails);
+      if (activeQuestId === id) {
+        const nextActiveId = updatedDetails[0]?.id ?? null;
+        setActiveQuestId(nextActiveId);
+        if (nextActiveId) {
+          localStorage.setItem(ACTIVE_QUEST_KEY, nextActiveId);
+        } else {
+          localStorage.removeItem(ACTIVE_QUEST_KEY);
+        }
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.detail || "クエストの削除に失敗しました。");
+    }
   };
 
   // レベル/XPは計算だけ裏で続け、表示は止めたまま（ユーザー指示）
@@ -185,12 +214,20 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <Link
-                  href={`/quest/${activeQuest.id}`}
-                  className="flex items-center justify-center h-12 mt-4 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
-                >
-                  地図を見る
-                </Link>
+                <div className="flex gap-3 mt-4">
+                  <Link
+                    href={`/quest/${activeQuest.id}`}
+                    className="flex-1 flex items-center justify-center h-12 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
+                  >
+                    地図を見る
+                  </Link>
+                  <button
+                    onClick={() => handleDeleteQuest(activeQuest.id)}
+                    className="h-12 px-5 rounded-xl bg-[#E05252] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm text-sm"
+                  >
+                    削除
+                  </button>
+                </div>
               </div>
 
               {mapItems.length > 0 && (

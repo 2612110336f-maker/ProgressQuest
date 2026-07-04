@@ -324,18 +324,18 @@ export default function NewQuestPage() {
         )}
 
         {step === "loading-diagnose" && (
-          <QuestLoading label="AIが診断質問を考えています..." expectedSeconds={10} />
+          <QuestLoading label="AIが診断質問を考えています..." expectedSeconds={5} />
         )}
         {step === "loading-propose" && (
-          <QuestLoading label="AIが現実的な期日を考えています..." expectedSeconds={10} />
+          <QuestLoading label="AIが現実的な期日を考えています..." expectedSeconds={5} />
         )}
         {step === "loading-roadmap" && (
-          <QuestLoading label="AIがロードマップを作成しています..." expectedSeconds={12} />
+          <QuestLoading label="AIがロードマップを作成しています..." expectedSeconds={8} />
         )}
         {step === "creating" && (
           <QuestLoading
             label="クエストを作成しています..."
-            expectedSeconds={Math.max(4, checkpoints.length + 2)}
+            expectedSeconds={2}
           />
         )}
 
