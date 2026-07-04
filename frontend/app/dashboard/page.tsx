@@ -264,7 +264,7 @@ export default function DashboardPage() {
                     href={`/quest/${activeQuest.id}`}
                     className="flex-1 flex items-center justify-center h-12 rounded-xl bg-[#2D6A4F] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
                   >
-                    地図を見る
+                    ロードマップを見る
                   </Link>
                   <button
                     onClick={() => handleDeleteQuest(activeQuest.id)}
