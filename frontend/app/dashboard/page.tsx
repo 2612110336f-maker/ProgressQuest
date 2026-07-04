@@ -204,7 +204,7 @@ export default function DashboardPage() {
               </div>
 
               {mapItems.length > 0 && (
-                <div className="bg-[#2D6A4F] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm max-h-[75vh] overflow-auto">
+                <div className={`bg-[#EEF5EE] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm max-h-[75vh] overflow-auto${theme === "fantasy" ? " border-[3px] border-[#2D6A4F]/50 shadow-[inset_0_0_10px_rgba(45,106,79,0.08),0_4px_16px_rgba(45,106,79,0.18)]" : ""}`}>
                   {theme === "fantasy" ? (
                     <QuestMap items={mapItems} viewMode="focus-current" interactive />
                   ) : (
