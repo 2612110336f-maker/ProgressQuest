@@ -24,18 +24,18 @@ button, input, textarea, select {
 }
 
 html[data-theme="simple"] body {
-  font-family: var(--font-inter), var(--font-noto-serif-jp), sans-serif;
+  font-family: var(--font-zen-maru-gothic), sans-serif;
 }
 
 html[data-theme="simple"] button,
 html[data-theme="simple"] input,
 html[data-theme="simple"] textarea,
 html[data-theme="simple"] select {
-  font-family: var(--font-inter), var(--font-noto-serif-jp), sans-serif;
+  font-family: var(--font-zen-maru-gothic), sans-serif;
 }
 
 html[data-theme="simple"] .font-display {
-  font-family: var(--font-cinzel), serif;
+  font-family: var(--font-zen-maru-gothic), serif;
 }
 
 input, textarea {
