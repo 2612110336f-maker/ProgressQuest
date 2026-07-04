@@ -99,7 +99,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-4">
             <Link href="/trash" className="text-sm text-white/80 hover:text-white transition">
-              🗑️ ゴミ箱
+              🏆 クリア済み
             </Link>
             <button
               onClick={toggle}
@@ -112,7 +112,7 @@ export default function DashboardPage() {
               onClick={handleLogout}
               className="text-sm text-white/80 hover:text-white transition"
             >
-              冒険をやめる
+              ログアウト
             </button>
           </div>
         </div>

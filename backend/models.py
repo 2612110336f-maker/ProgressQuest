@@ -44,5 +44,6 @@ class Checkpoint(Base):
     due_date = Column(Date, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     order_index = Column(Integer, nullable=True)
+    estimated_hours = Column(Integer, nullable=True)
 
     quest = relationship("Quest", back_populates="checkpoints")

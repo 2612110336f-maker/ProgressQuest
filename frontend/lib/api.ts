@@ -36,6 +36,7 @@ export type Checkpoint = {
   due_date: string | null;
   completed_at: string | null;
   order_index: number | null;
+  estimated_hours: number | null;
 };
 
 export type Quest = {
@@ -109,7 +110,13 @@ export const getTrashedQuests = async (): Promise<Quest[]> => {
 
 export const createCheckpoint = async (
   questId: string,
-  data: { title: string; description?: string; due_date?: string; order_index?: number }
+  data: {
+    title: string;
+    description?: string;
+    due_date?: string;
+    order_index?: number;
+    estimated_hours?: number;
+  }
 ): Promise<Checkpoint> => {
   const res = await api.post(`/quests/${questId}/checkpoints`, data);
   return res.data;
@@ -123,6 +130,7 @@ export const updateCheckpoint = async (
     due_date: string;
     order_index: number;
     completed: boolean;
+    estimated_hours: number;
   }>
 ): Promise<Checkpoint> => {
   const res = await api.patch(`/checkpoints/${id}`, data);
@@ -167,6 +175,8 @@ export type RoadmapCheckpoint = {
   description: string;
   due_date: string;
   order_index: number;
+  estimated_hours: number;
+  deliverable: string;
 };
 
 export const generateRoadmap = async (

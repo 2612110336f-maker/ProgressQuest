@@ -43,7 +43,7 @@ export default function TrashPage() {
           <Link href="/dashboard" className="text-sm text-white/80 hover:text-white transition">
             ← ダッシュボードに戻る
           </Link>
-          <h1 className="font-display text-lg font-bold text-white">🗑️ ゴミ箱</h1>
+          <h1 className="font-display text-lg font-bold text-white">🏆 クリア済み</h1>
         </div>
       </header>
 
@@ -51,7 +51,7 @@ export default function TrashPage() {
         {loading && <p className="text-[#2D6A4F] font-display">読み込み中...</p>}
 
         {!loading && quests.length === 0 && (
-          <p className="text-[#888888] text-center py-10">ゴミ箱は空です。</p>
+          <p className="text-[#888888] text-center py-10">クリア済みは空です。</p>
         )}
 
         <div className="space-y-3">

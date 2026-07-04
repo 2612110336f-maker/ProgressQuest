@@ -88,7 +88,7 @@ export default function QuestDetailPage() {
   };
 
   const handleTrashQuest = async () => {
-    if (!confirm("このクエストをゴミ箱に入れますか？")) return;
+    if (!confirm("このクエストクリア済みに入れますか？")) return;
     await trashQuest(questId);
     router.push("/dashboard");
   };
@@ -120,6 +120,7 @@ export default function QuestDetailPage() {
           <Link href="/dashboard" className="text-sm text-white/80 hover:text-white transition">
             ← ダッシュボードに戻る
           </Link>
+
           <div className="flex items-center gap-4">
             <button
               onClick={toggle}
@@ -128,13 +129,14 @@ export default function QuestDetailPage() {
             >
               {theme === "fantasy" ? "📋 シンプル" : "⚔️ ファンタジー"}
             </button>
-            <button
-              onClick={handleTrashQuest}
-              className="text-sm text-white/80 hover:text-white transition"
-            >
-              🗑️ ゴミ箱に入れる
-            </button>
-          </div>
+
+          <button
+            onClick={handleTrashQuest}
+            className="text-sm text-white/80 hover:text-white transition"
+          >
+            🏆 クリア済みに入れる
+          </button>
+
         </div>
       </header>
 
@@ -211,6 +213,11 @@ export default function QuestDetailPage() {
                 {current.checkpoint.due_date && (
                   <p className="text-xs text-[#888888] mt-1">
                     期日: {current.checkpoint.due_date}
+                  </p>
+                )}
+                {current.checkpoint.estimated_hours != null && (
+                  <p className="text-xs text-[#E9A62A] font-bold mt-1">
+                    ⏱ 目安{current.checkpoint.estimated_hours}時間
                   </p>
                 )}
                 <button
@@ -293,6 +300,11 @@ export default function QuestDetailPage() {
                               {checkpoint.description}
                             </p>
                           )}
+                          {checkpoint.estimated_hours != null && (
+                            <p className="text-xs text-[#E9A62A] font-bold mt-0.5">
+                              ⏱ 目安{checkpoint.estimated_hours}時間
+                            </p>
+                          )}
                         </div>
                       </div>
                       <button
@@ -347,7 +359,7 @@ export default function QuestDetailPage() {
               onClick={handleTrashQuest}
               className="flex items-center justify-center h-12 w-full rounded-xl bg-[#E9A62A] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
             >
-              🗑️ ゴミ箱に入れる
+              🏆 クリア済みに入れる
             </button>
           </div>
         </div>

@@ -38,6 +38,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 GEMINI_API_KEY= Google AI Studioで自分で取得してきたものをかく
 
 # Python仮想環境を作成（初回のみー何かしらエラーが出た場合はこちら以降再度全てのコマンドを上から打っていってください）
+#このコマンドを必ずbackendに移動してから実行してください！！
 python3 -m venv venv
 
 # 仮想環境を有効化
