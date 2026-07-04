@@ -192,4 +192,14 @@ export const generateRoadmap = async (
   return res.data;
 };
 
+export const getLineStatus = async (): Promise<{ linked: boolean }> => {
+  const res = await api.get("/line/status");
+  return res.data;
+};
+
+export const createLineLinkCode = async (): Promise<{ code: string; linked: boolean }> => {
+  const res = await api.post("/line/link-code");
+  return res.data;
+};
+
 export default api;

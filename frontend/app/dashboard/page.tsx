@@ -3,7 +3,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { getMe, getQuest, getQuests, Quest, QuestDetail } from "@/lib/api";
+import {
+  createLineLinkCode,
+  getLineStatus,
+  getMe,
+  getQuest,
+  getQuests,
+  Quest,
+  QuestDetail,
+} from "@/lib/api";
 import { getCheckpointStatuses, isOverdue } from "@/lib/questStatus";
 import QuestMap from "@/components/QuestMap";
 import WeeklyTimeline from "@/components/WeeklyTimeline";
@@ -18,6 +26,10 @@ export default function DashboardPage() {
   const [activeQuestId, setActiveQuestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showLineModal, setShowLineModal] = useState(false);
+  const [lineLinked, setLineLinked] = useState(false);
+  const [lineCode, setLineCode] = useState<string | null>(null);
+  const [lineLoading, setLineLoading] = useState(false);
 
   const load = async () => {
     const [me, quests] = await Promise.all([getMe(), getQuests()]);
@@ -41,7 +53,23 @@ export default function DashboardPage() {
     load()
       .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
+    getLineStatus()
+      .then((res) => setLineLinked(res.linked))
+      .catch(() => {});
   }, []);
+
+  const handleOpenLineModal = async () => {
+    setShowLineModal(true);
+    if (!lineLinked && !lineCode) {
+      setLineLoading(true);
+      try {
+        const res = await createLineLinkCode();
+        setLineCode(res.code);
+      } finally {
+        setLineLoading(false);
+      }
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -95,6 +123,12 @@ export default function DashboardPage() {
             <h1 className="font-display text-lg font-bold text-white">ProgressQuest</h1>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              onClick={handleOpenLineModal}
+              className="text-sm text-white/80 hover:text-white transition"
+            >
+              {lineLinked ? "🔔 LINE連携済み" : "🔔 LINE通知"}
+            </button>
             <Link href="/trash" className="text-sm text-white/80 hover:text-white transition">
               🏆 クリア済み
             </Link>
@@ -251,6 +285,64 @@ export default function DashboardPage() {
             >
               ＋ 新しいクエストを始める
             </Link>
+          </div>
+        </div>
+      )}
+
+      {showLineModal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowLineModal(false)}
+        >
+          <div
+            className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-5 w-full max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-display text-lg font-bold mb-4 text-[#2C2C2C]">
+              🔔 LINE通知連携
+            </h3>
+
+            {lineLinked ? (
+              <p className="text-sm text-[#2D6A4F] font-bold">
+                連携済みです。期日を過ぎたチェックポイントがあると、次回ログイン時にLINEでお知らせします。
+              </p>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-[#5a5a5a]">
+                  以下の手順でLINE通知を有効にできます。
+                </p>
+                <ol className="text-sm text-[#2C2C2C] list-decimal list-inside space-y-2">
+                  <li>ProgressQuestのLINE公式アカウントを友だち追加する</li>
+                  <li>下の連携コードをそのままLINEでメッセージ送信する</li>
+                </ol>
+                <div className="bg-[#F5F0E8] shadow-neumorphism-inset rounded-xl p-4 text-center">
+                  {lineLoading ? (
+                    <p className="text-sm text-[#888888]">発行中...</p>
+                  ) : (
+                    <p className="font-display text-2xl font-bold tracking-widest text-[#2D6A4F]">
+                      {lineCode ?? "----"}
+                    </p>
+                  )}
+                </div>
+                {process.env.NEXT_PUBLIC_LINE_BASIC_ID && (
+                  <a
+                    href={`https://line.me/R/ti/p/@${process.env.NEXT_PUBLIC_LINE_BASIC_ID}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center h-12 rounded-xl bg-[#06C755] text-white font-bold hover:opacity-90 transition shadow-neumorphism-sm"
+                  >
+                    LINEで友だち追加する
+                  </a>
+                )}
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowLineModal(false)}
+              className="w-full text-center mt-4 text-xs text-[#888888] hover:opacity-70"
+            >
+              閉じる
+            </button>
           </div>
         </div>
       )}
