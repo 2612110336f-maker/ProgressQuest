@@ -9,8 +9,8 @@
     },
     {
       "name": "frontend",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd frontend && npm run dev"],
       "port": 3000
     }
   ]

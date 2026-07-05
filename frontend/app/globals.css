@@ -47,6 +47,13 @@ input::placeholder, textarea::placeholder {
   opacity: 1;
 }
 
+/* iOS Safari renders type="date" as a native control that ignores
+   background-color/box-shadow unless appearance is reset. */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .font-display {
   font-family: var(--font-zen-maru-gothic), sans-serif;
 }
