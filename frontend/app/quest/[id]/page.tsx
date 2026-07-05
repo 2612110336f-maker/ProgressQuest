@@ -214,7 +214,7 @@ export default function QuestDetailPage() {
 
         {tab === "map" && (
           <div>
-            <div className={`bg-[#EEF5EE] rounded-2xl p-2 max-w-xs mx-auto max-h-[75vh] overflow-auto${theme === "fantasy" ? " border-[3px] border-[#2D6A4F]/50 shadow-[inset_0_0_10px_rgba(45,106,79,0.08),0_4px_16px_rgba(45,106,79,0.18)]" : ""}`}>
+            <div className={`bg-[#EEF5EE] rounded-2xl p-2 max-w-xs mx-auto max-h-[75vh] overflow-auto ${theme === "fantasy" ? "border-[3px] border-[#2D6A4F]/50 shadow-[inset_0_0_10px_rgba(45,106,79,0.08),0_4px_16px_rgba(45,106,79,0.18)]" : ""}`}>
               {theme === "fantasy" ? (
                 <QuestMap items={items} interactive />
               ) : (
