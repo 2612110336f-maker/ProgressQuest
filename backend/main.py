@@ -8,7 +8,10 @@ from database import engine, get_db, Base
 import models, schemas, auth
 from routers import quests, checkpoints, ai, line
 
+import os
+
 Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI()
 
