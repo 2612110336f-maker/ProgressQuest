@@ -1,5 +1,9 @@
+// --- テーマ「シンプル」用のロードマップ表示(SVGで自作したすごろく風マップ) ---
+// QuestMap.tsx(ファンタジー演出版)の簡易版。チェックポイントをジグザグに配置し、
+// スタート→各チェックポイント→ゴールを曲線でつないで進捗を可視化する。
 import { StatusItem } from "@/lib/questStatus";
 
+// レイアウト計算に使う定数群(SVGのviewBoxサイズ・ノード間隔・左右の配置X座標など)
 const VIEW_WIDTH = 320;
 const VIEW_HEIGHT_PER_NODE = 110;
 const TOP_MARGIN = 60;
@@ -28,6 +32,8 @@ const nodeIcon: Record<StatusItem["status"], string> = {
   future: "🔒",
 };
 
+// 1つのチェックポイント/スタート/ゴールを表す円形の駒(ボードゲームのコマ風に立体的に見せる)。
+// ステータスごとの色(nodeColor)とアイコン(nodeIcon)は上の対応表から渡される。
 function Puck({
   x,
   y,
@@ -73,6 +79,7 @@ type Props = {
 
 export default function QuestMapSimple({ items }: Props) {
   const count = items.length;
+  // チェックポイント数に応じてSVG全体の縦幅を決める(下=スタート、上=ゴール、下から上へ進む)
   const height =
     TOP_MARGIN + BOTTOM_MARGIN + PUCK_DEPTH + VIEW_HEIGHT_PER_NODE * (count + 1);
 
@@ -80,12 +87,14 @@ export default function QuestMapSimple({ items }: Props) {
   const goalY = TOP_MARGIN;
   const step = count > 0 ? (startY - goalY) / (count + 1) : 0;
 
+  // 各チェックポイントを左右交互(ジグザグ)に配置し、下(スタート)から上(ゴール)へ等間隔に並べる
   const nodes = items.map((item, i) => ({
     ...item,
     x: i % 2 === 0 ? LEFT_X : RIGHT_X,
     y: startY - step * (i + 1),
   }));
 
+  // スタート→各ノード→ゴールを結ぶ曲線を描くための座標列
   const points = [
     { x: CENTER_X, y: startY },
     ...nodes.map((n) => ({ x: n.x, y: n.y })),
@@ -94,6 +103,7 @@ export default function QuestMapSimple({ items }: Props) {
 
   const allCompleted = count > 0 && nodes.every((n) => n.status === "completed");
 
+  // 区間(segment)ごとに、その手前のチェックポイントが完了済みなら実線・緑色にする
   const segmentCompleted = (segmentIndex: number) => {
     if (segmentIndex === count) return allCompleted;
     return nodes[segmentIndex]?.status === "completed";

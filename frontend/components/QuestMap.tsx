@@ -1,3 +1,7 @@
+// --- テーマ「ファンタジー」用のロードマップ表示 ---
+// 背景に地図イラストを敷き、チェックポイントをサインカーブ(波)状に配置してすごろく風に見せる。
+// QuestMapSimple.tsxとの最大の違いは、interactive=trueのときにパン(ドラッグ移動)・
+// ホイール/ピンチによるズームをSVGのviewBox操作だけで自前実装している点。
 "use client";
 
 import {
@@ -101,6 +105,7 @@ const clamp = (value: number, min: number, max: number) => {
   return Math.min(Math.max(value, min), max);
 };
 
+// パン/ズーム後のviewBoxが元のSVG範囲(0〜VIEW_WIDTH/HEIGHT)からはみ出さないよう補正する
 const clampViewBox = (box: ViewBox): ViewBox => {
   const width = clamp(box.width, MIN_VIEW_WIDTH, VIEW_WIDTH);
   const height = clamp(box.height, MIN_VIEW_HEIGHT, VIEW_HEIGHT);
@@ -127,6 +132,11 @@ export default function QuestMap({ items, viewMode = "full", interactive = false
   const goalX = 70;
   const goalY = 70;
 
+  // チェックポイントのインデックスからSVG座標を計算する。
+  // y座標: スタート(startY)からゴール(goalY)まで進捗(progress)に応じて直線補間。
+  // x座標: sin波でジグザグに振らせて「道」らしく見せる。
+  // amplitude(振れ幅)とwaveCount(波の数)はチェックポイント数に応じて自動調整し、
+  // 数が多くても少なくても画面に収まりつつ蛇行して見えるようにしている。
   const getNodePosition = (index: number) => {
     const progress = (index + 1) / (count + 1);
     const minX = MAP_PADDING_X;
@@ -162,10 +172,13 @@ export default function QuestMap({ items, viewMode = "full", interactive = false
   ];
 
   const allCompleted = count > 0 && nodes.every((n) => n.status === "completed");
+  // viewMode="focus-current"のとき最初にズームインして表示する対象。
+  // 優先順位: 現在地(current) > 期日超過(overdue) > それ以外の未完了
   const focusNode =
     nodes.find((n) => n.status === "current") ??
     nodes.find((n) => n.status === "overdue") ??
     nodes.find((n) => !n.checkpoint.completed_at);
+  // focus-currentならfocusNodeを中心にした小さいviewBox、fullなら地図全体を表示するviewBox
   const initialViewBox =
     viewMode === "focus-current" && focusNode
       ? {
@@ -192,6 +205,7 @@ export default function QuestMap({ items, viewMode = "full", interactive = false
     return nodes[segmentIndex]?.status === "completed";
   };
 
+  // クライアント座標(マウス/タッチ位置)をSVG内部座標(viewBox基準)に変換する
   const getSvgPoint = (clientX: number, clientY: number, box: ViewBox = activeViewBox) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return { x: box.x, y: box.y };
@@ -202,6 +216,8 @@ export default function QuestMap({ items, viewMode = "full", interactive = false
     };
   };
 
+  // (clientX, clientY)を中心に据えたままviewBoxを拡大/縮小する(scale<1で拡大、>1で縮小)。
+  // ホイール・ピンチ操作の両方から呼ばれる共通ズーム処理。
   const zoomAt = (clientX: number, clientY: number, scale: number) => {
     setViewBox((current) => {
       const minScale = Math.max(MIN_VIEW_WIDTH / current.width, MIN_VIEW_HEIGHT / current.height);
@@ -222,12 +238,14 @@ export default function QuestMap({ items, viewMode = "full", interactive = false
     });
   };
 
+  // マウスホイール: 下スクロールで縮小、上スクロールで拡大
   const handleWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
     if (!interactive) return;
     event.preventDefault();
     zoomAt(event.clientX, event.clientY, event.deltaY > 0 ? 1.12 : 0.88);
   };
 
+  // --- マウスドラッグによるパン(タッチはhandleTouch*側で処理するのでここでは除外) ---
   const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (!interactive || event.pointerType === "touch") return;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -262,6 +280,7 @@ export default function QuestMap({ items, viewMode = "full", interactive = false
     panRef.current = null;
   };
 
+  // --- タッチ操作: 1本指でパン、2本指でピンチズーム ---
   const getTouchDistance = (touches: ReactTouchList) => {
     const first = touches.item(0);
     const second = touches.item(1);

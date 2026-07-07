@@ -1,3 +1,6 @@
+// --- ダッシュボード下部に表示する「今週のタスク」横断ビュー ---
+// 複数クエストのチェックポイントを1つの時系列にまとめ、
+// 「期日超過」または「今日から7日以内」のものだけを抽出して日付順に並べる。
 import { QuestDetail } from "@/lib/api";
 
 type TimelineItem = {
@@ -25,6 +28,8 @@ export default function WeeklyTimeline({ quests }: Props) {
   const weekEnd = new Date(today);
   weekEnd.setDate(weekEnd.getDate() + 7);
 
+  // 全クエストの未完了チェックポイントをフラット化し、
+  // 「期日超過」または「今日〜7日後まで」のものだけ残して期日昇順にソートする
   const items: TimelineItem[] = quests
     .flatMap((q) =>
       q.checkpoints

@@ -1,3 +1,6 @@
+// --- PWA用のWebアプリマニフェスト定義(第3週にServiceweb/Serwistで追加、AGENTS.md参照) ---
+// Next.jsがこの関数の戻り値から自動で/manifest.webmanifestを生成する。
+// ホーム画面追加時のアイコン・アプリ名・テーマカラーなどを定義する。
 import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {

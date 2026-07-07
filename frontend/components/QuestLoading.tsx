@@ -1,3 +1,7 @@
+// --- AI呼び出し待機中のローディング画面 ---
+// Gemini API呼び出し(diagnose/propose-deadline/generate-roadmap)は数秒〜十数秒かかるため、
+// 単なるスピナーではなく「進捗バー(実測ベースの学習付き)」「ヒント表示」「暇つぶしゲーム」を
+// 組み合わせて体感待ち時間を減らす工夫をしている(new/page.tsxのloading-*ステップで使用)。
 "use client";
 import { useEffect, useState, useRef } from "react";
 import RunnerGame from "@/components/RunnerGame";
@@ -15,6 +19,8 @@ type Props = {
   expectedSeconds: number;
 };
 
+// labelの文言から「どのAI呼び出しの待機か」を判定し、実測時間を保存するキーを決める
+// (呼び出し種別ごとにlocalStorageで所要時間の実績を分けて記録するため)
 const getStorageKeyFromLabel = (label: string): string => {
   if (label.includes("診断")) return "pq_time_diagnose";
   if (label.includes("期日")) return "pq_time_propose";
@@ -88,6 +94,8 @@ export default function QuestLoading({ label, expectedSeconds }: Props) {
   }, []);
 
   // Eases toward 90% over the dynamic expected duration, then slows down asymptotically
+  // 予測時間内は0→90%まで線形に進め、予測時間を超えたら90%から漸近的に増やし続ける
+  // (実際にいつ終わるか分からないAI応答を、100%で止まって見える手前まで進め続ける演出)
   const progress = elapsed < dynamicExpectedSeconds
     ? (elapsed / dynamicExpectedSeconds) * 90
     : 90 + (8 * (elapsed - dynamicExpectedSeconds)) / (elapsed - dynamicExpectedSeconds + 15);

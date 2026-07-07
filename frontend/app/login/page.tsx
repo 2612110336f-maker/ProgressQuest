@@ -1,3 +1,6 @@
+// --- ログイン/新規登録ページ ---
+// 1つのフォームで「ログイン」と「新規登録」を兼用する。
+// URLクエリ ?mode=register の有無だけでモードを切り替える(状態をURLに持たせる設計)。
 "use client";
 import { Suspense, useMemo, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -7,11 +10,14 @@ import { login, register } from "@/lib/api";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // mode=register以外(未指定含む)はすべてログインモード扱い
   const isLogin = useMemo(() => searchParams.get("mode") !== "register", [searchParams]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // isLoginに応じてlib/api.tsのlogin()/register()を呼び分け、
+  // 取得したJWTをlocalStorageに保存してからダッシュボードへ遷移する。
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
@@ -22,10 +28,12 @@ function LoginForm() {
           localStorage.setItem("token", data.access_token);
           router.push("/dashboard");
     } catch (e: any) {
+      // backend/main.pyがHTTPException(detail=...)で返すエラーメッセージをそのまま表示する
       setError(e.response?.data?.detail || "エラーが発生しました");
     }
   };
 
+  // ログイン/登録の切り替えはURLクエリを書き換えるだけ(ページ遷移扱いだがコンポーネントは同じ)
   const toggleMode = () => {
     const nextMode = isLogin ? "register" : "login";
     router.push(`/login?mode=${nextMode}`);
@@ -107,6 +115,8 @@ function LoginForm() {
   );
 }
 
+// useSearchParams()を使うコンポーネントはNext.jsの要件でSuspenseに包む必要があるため、
+// ページ本体はLoginFormをSuspenseでラップするだけの薄いラッパーにしている。
 export default function LoginPage() {
   return (
     <Suspense>

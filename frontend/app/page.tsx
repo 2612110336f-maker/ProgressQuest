@@ -1,3 +1,6 @@
+// --- ルート("/")ページ ---
+// 画面は何も描画せず、ログイン状態を判定してリダイレクトするだけの
+// 「振り分け役」。トークンが無ければ/login、有効なトークンがあれば/dashboardへ。
 "use client";
 
 import { useEffect } from "react";
@@ -14,6 +17,7 @@ export default function Home() {
       return;
     }
 
+    // トークンがあっても失効している可能性があるため、/auth/meで実際に検証する
     getMe()
       .then(() => router.replace("/dashboard"))
       .catch(() => {

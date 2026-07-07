@@ -1,14 +1,22 @@
+// --- バックエンドAPIクライアント集約ファイル ---
+// AGENTS.mdの規約「APIクライアントはlib/api.tsに集約する」に従い、
+// axiosインスタンス1つと、エンドポイントごとの関数・型をすべてここにまとめている。
+// 各page/componentはこのファイルの関数をimportして呼ぶだけでよい。
 import axios from "axios";
 
+// NEXT_PUBLIC_API_URL未設定時はローカルのFastAPI(uvicorn)を向く。
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
 });
 
+// SSR時(typeof window === "undefined")はlocalStorageが無いのでnullを返す。
 const getStoredToken = (): string | null => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("token");
 };
 
+// 全リクエストに共通してAuthorizationヘッダーを付与するインターセプター。
+// login()成功時にlocalStorageへ保存したJWT(backend/auth.py参照)をここで自動添付する。
 api.interceptors.request.use((config) => {
   const token = getStoredToken();
   if (token) {
@@ -17,6 +25,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// --- 認証系(backend/main.pyの/auth/*に対応) ---
 export const register = async (email: string, password: string) => {
   const res = await api.post("/auth/register", { email, password });
   return res.data;
@@ -27,12 +36,14 @@ export const login = async (email: string, password: string) => {
   return res.data;
 };
 
+// トークンをクエリパラメータで渡す実装(backend側がGET /auth/me?token=...を想定しているため)
 export const getMe = async (): Promise<{ id: string; email: string }> => {
   const token = getStoredToken();
   const res = await api.get("/auth/me", { params: { token } });
   return res.data;
 };
 
+// --- 型定義: backend/schemas.pyのCheckpointOut/QuestOutに対応 ---
 export type Checkpoint = {
   id: string;
   quest_id: string;
@@ -60,6 +71,7 @@ export type QuestDetail = Quest & {
   checkpoints: Checkpoint[];
 };
 
+// --- ロードマップ(Quest)CRUD: backend/routers/quests.pyに対応 ---
 export const getQuests = async (): Promise<Quest[]> => {
   const res = await api.get("/quests");
   return res.data;
@@ -113,6 +125,7 @@ export const getTrashedQuests = async (): Promise<Quest[]> => {
   return res.data;
 };
 
+// --- チェックポイントCRUD: backend/routers/checkpoints.pyに対応 ---
 export const createCheckpoint = async (
   questId: string,
   data: {
@@ -147,12 +160,15 @@ export const deleteCheckpoint = async (id: string) => {
   return res.data;
 };
 
+// --- Gemini AI連携: Core AI Flowの3ステップ(AGENTS.md参照、backend/routers/ai.pyに対応) ---
+// new/page.tsx(新規作成フロー)がdiagnose→proposeDeadline→generateRoadmapの順に呼ぶ。
 export type DiagnoseQuestion = {
   id: string;
   text: string;
   options: string[];
 };
 
+// Step1: 目標と希望期日から診断質問一覧を取得
 export const diagnose = async (
   goal: string,
   desired_deadline: string,
@@ -162,6 +178,7 @@ export const diagnose = async (
   return res.data;
 };
 
+// Step2: 診断の回答から現実的な期日を提案してもらう
 export const proposeDeadline = async (
   goal: string,
   desired_deadline: string,
@@ -184,6 +201,7 @@ export type RoadmapCheckpoint = {
   deliverable: string;
 };
 
+// Step3: 確定期日と診断要約からチェックポイント列(ロードマップ)を生成してもらう
 export const generateRoadmap = async (
   goal: string,
   final_deadline: string,
@@ -197,11 +215,13 @@ export const generateRoadmap = async (
   return res.data;
 };
 
+// --- LINE連携: backend/routers/line.pyに対応 ---
 export const getLineStatus = async (): Promise<{ linked: boolean }> => {
   const res = await api.get("/line/status");
   return res.data;
 };
 
+// 連携用の6桁コードを発行してもらう。ユーザーはこのコードをLINE公式アカウントに送信して紐付ける。
 export const createLineLinkCode = async (): Promise<{ code: string; linked: boolean }> => {
   const res = await api.post("/line/link-code");
   return res.data;

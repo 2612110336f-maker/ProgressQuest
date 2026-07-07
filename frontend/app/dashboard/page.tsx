@@ -20,7 +20,11 @@ import WeeklyTimeline from "@/components/WeeklyTimeline";
 import Mascot from "@/components/Mascot";
 import { useTheme } from "@/lib/theme";
 
-const ACTIVE_QUEST_KEY = "activeQuestId";
+// --- ダッシュボード(ロードマップ一覧・進捗表示のメイン画面) ---
+// ユーザーが複数のクエスト(ロードマップ)を持てる前提で、
+// 「今どれを表示中か」をactiveQuestIdで管理し、localStorageに永続化する。
+// LINE連携モーダル・クエスト切り替えモーダルもこの1ファイルに同居している。
+const ACTIVE_QUEST_KEY = "activeQuestId"; // 選択中クエストIDをlocalStorageに保存するキー
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -37,6 +41,9 @@ export default function DashboardPage() {
   const [lineCode, setLineCode] = useState<string | null>(null);
   const [lineLoading, setLineLoading] = useState(false);
 
+  // ユーザー情報とクエスト一覧をまとめて取得する初期ロード処理。
+  // 一覧(getQuests)だけだとcheckpointsが含まれないため、各クエストごとにgetQuest()で
+  // 詳細を取り直し、Promise.allで並列取得している。
   const load = async () => {
     const me = await getMe();
     setEmail(me.email);
@@ -45,6 +52,7 @@ export default function DashboardPage() {
     const details = await Promise.all(quests.map((q: Quest) => getQuest(q.id)));
     setQuestDetails(details);
 
+    // 前回選択していたクエストIDが今も存在すればそれを復元、なければ先頭を採用
     const savedId = localStorage.getItem(ACTIVE_QUEST_KEY);
     const fallbackId = details[0]?.id ?? null;
     const validId = details.some((d) => d.id === savedId) ? savedId : fallbackId;
@@ -52,6 +60,7 @@ export default function DashboardPage() {
     if (validId) localStorage.setItem(ACTIVE_QUEST_KEY, validId);
   };
 
+  // ハンバーガーメニューの外側クリックで閉じるための共通処理
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -62,6 +71,9 @@ export default function DashboardPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // マウント時: 未ログインなら/loginへ即リダイレクト、ログイン済みならload()を実行。
+  // load()が401で失敗した場合(トークン失効)もログイン画面に戻す。
+  // LINE連携状況は失敗してもUIをブロックしたくないため、エラーは握りつぶす。
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -83,6 +95,8 @@ export default function DashboardPage() {
       .catch(() => {});
   }, []);
 
+  // 未連携かつまだコード未発行の場合のみ、モーダルを開くタイミングで新規コードを発行する
+  // (毎回開くたびに発行し直さないためのガード)
   const handleOpenLineModal = async () => {
     setShowLineModal(true);
     if (!lineLinked && !lineCode) {
@@ -129,6 +143,7 @@ export default function DashboardPage() {
   };
 
   // レベル/XPは計算だけ裏で続け、表示は止めたまま（ユーザー指示）
+  // void level/xpで未使用変数の警告を抑えつつ、将来また表示を復活させやすいよう計算だけ残している
   const totalCompleted = questDetails
     .flatMap((q) => q.checkpoints)
     .filter((cp) => cp.completed_at).length;
@@ -137,6 +152,7 @@ export default function DashboardPage() {
   void level;
   void xp;
 
+  // 現在選択中のクエストと、その進捗率・「次にやるべきこと」を導出する
   const activeQuest = questDetails.find((q) => q.id === activeQuestId) ?? null;
   const sortedCheckpoints = activeQuest
     ? [...activeQuest.checkpoints].sort(
@@ -147,6 +163,7 @@ export default function DashboardPage() {
   const totalCount = sortedCheckpoints.length;
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
   const nextCheckpoint = sortedCheckpoints.find((cp) => !cp.completed_at) ?? null;
+  // lib/questStatus.tsで算出したステータス付きチェックポイント一覧。QuestMap系コンポーネントに渡す。
   const mapItems = activeQuest ? getCheckpointStatuses(activeQuest.checkpoints) : [];
 
   if (loading) {
@@ -159,6 +176,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-parchment">
+      {/* ヘッダー: ロゴ + ハンバーガーメニュー(LINE通知/クリア済み/テーマ切替/ログアウト) */}
       <header className="bg-[#2D6A4F] h-16 flex items-center">
         <div className="w-full max-w-2xl lg:max-w-5xl mx-auto px-4 sm:px-8 flex justify-between items-center gap-2">
           <div className="flex items-center gap-2">
@@ -237,6 +255,7 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* 選択中クエストのカード: 進捗バー、次にやるべきこと、ロードマップ縮小プレビュー */}
         {activeQuest && (
           <div className="bg-[#F5F0E8] shadow-neumorphism rounded-2xl p-5">
             <h2 className="font-display text-xl font-bold text-[#2C2C2C] mb-1">
@@ -304,6 +323,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
+              {/* テーマに応じてファンタジー風マップ or シンプルなリスト表示を出し分ける */}
               {mapItems.length > 0 && (
                 <div className={`bg-[#EEF5EE] rounded-xl p-2 mt-4 lg:mt-0 max-w-xs mx-auto lg:max-w-sm max-h-[75vh] overflow-auto${theme === "fantasy" ? " border-[3px] border-[#2D6A4F]/50 shadow-[inset_0_0_10px_rgba(45,106,79,0.08),0_4px_16px_rgba(45,106,79,0.18)]" : ""}`}>
                   {theme === "fantasy" ? (
@@ -333,6 +353,7 @@ export default function DashboardPage() {
         ]}
       />
 
+      {/* クエスト切り替えモーダル */}
       {showModal && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
@@ -370,6 +391,7 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* LINE連携モーダル: 未連携なら発行済みコードと友だち追加リンクを表示 */}
       {showLineModal && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"

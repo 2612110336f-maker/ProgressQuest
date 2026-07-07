@@ -18,6 +18,9 @@ import QuestMapSimple from "@/components/QuestMapSimple";
 import Mascot from "@/components/Mascot";
 import { useTheme } from "@/lib/theme";
 
+// --- 個別ロードマップ詳細ページ(/quest/[id]) ---
+// 1つのクエストについて、すごろく風の「マップ」表示とチェックポイントの
+// 追加・完了・削除ができる「一覧」表示を2タブで切り替える。
 type Tab = "map" | "list";
 
 export default function QuestDetailPage() {
@@ -68,6 +71,7 @@ export default function QuestDetailPage() {
     load();
   }, [questId]);
 
+  // 手動でチェックポイントを1件追加する。order_indexは末尾(現在の件数+1)に自動採番。
   const handleAddCheckpoint = async () => {
     if (!newTitle.trim()) return;
     await createCheckpoint(questId, {
@@ -82,6 +86,9 @@ export default function QuestDetailPage() {
     load();
   };
 
+  // チェックポイントの完了/未完了をトグルする。
+  // トグル前後で「全チェックポイントが完了状態になったか」を比較し、
+  // 未完了→全完了に変わった瞬間だけクリア演出(showCelebration)を出す。
   const handleToggleComplete = async (checkpoint: Checkpoint) => {
     const wasAllCompleted =
       !!quest && quest.checkpoints.length > 0 && quest.checkpoints.every((cp) => cp.completed_at);
@@ -100,6 +107,8 @@ export default function QuestDetailPage() {
     load();
   };
 
+  // 「クリア済みに入れる」= 論理削除(ゴミ箱行き)。backend側はarchived_atを立てるだけで
+  // データは消えず、trash/page.tsxから復元できる。
   const handleTrashQuest = async () => {
     if (!confirm("このクエストクリア済みに入れますか？")) return;
     await trashQuest(questId);
@@ -132,6 +141,8 @@ export default function QuestDetailPage() {
     );
   }
 
+  // lib/questStatus.tsで各チェックポイントに"completed/current/overdue/future"を付与。
+  // マップ画面では「今取り組むべきもの(current)」または「期日超過中(overdue)」を1つだけ強調表示する。
   const items = getCheckpointStatuses(quest.checkpoints);
   const current = items.find((item) => item.status === "current" || item.status === "overdue");
   const allCompleted = items.length > 0 && items.every((item) => item.status === "completed");

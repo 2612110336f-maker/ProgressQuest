@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Quest, deleteQuest, getTrashedQuests, restoreQuest } from "@/lib/api";
 
+// --- ゴミ箱(クリア済み/削除済みロードマップ)ページ ---
+// archived_atが立っているQuestのみ一覧表示し、「復元」または「完全削除」を選べる。
 export default function TrashPage() {
   const router = useRouter();
   const [quests, setQuests] = useState<Quest[]>([]);
@@ -25,11 +27,13 @@ export default function TrashPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // archived_atをクリアしてダッシュボード一覧に戻す(backend: /quests/{id}/restore)
   const handleRestore = async (id: string) => {
     await restoreQuest(id);
     load();
   };
 
+  // こちらは論理削除ではなく物理削除(DELETE /quests/{id})。元に戻せないため確認ダイアログを挟む。
   const handlePermanentDelete = async (id: string) => {
     if (!confirm("完全に削除します。この操作は元に戻せません。よろしいですか？")) return;
     await deleteQuest(id);

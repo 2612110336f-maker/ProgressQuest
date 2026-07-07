@@ -1,3 +1,7 @@
+# --- Gemini API連携: Core AI Flowの3ステップ(diagnose → propose-deadline → generate-roadmap) ---
+# AGENTS.mdで定義されている「新規ロードマップ作成は必ずこの3ステップを経る」を実装したファイル。
+# 3エンドポイントはいずれも同じcall_gemini()を通じてGemini APIを呼び、
+# response_schemaにPydanticモデルを渡すことでJSON構造化出力を強制している。
 import os
 import time
 from datetime import date
@@ -14,11 +18,13 @@ router = APIRouter(prefix="/ai", tags=["ai"])
 
 # Tried in order on each call; if one model is overloaded (503) or rate
 # limited (429) we fall through to the next rather than failing outright.
+# 上から順に「軽量・低コスト→高性能」の順に並んでおり、まず安価なモデルで試す。
 MODEL_CANDIDATES = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"]
 RETRIES_PER_MODEL = 2
 RETRY_DELAY_SECONDS = 5
 
 
+# GEMINI_API_KEYが未設定の場合はここで500エラーにする(呼び出し前のガード)。
 def get_client() -> genai.Client:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -26,6 +32,14 @@ def get_client() -> genai.Client:
     return genai.Client(api_key=api_key)
 
 
+# 3エンドポイント共通のGemini呼び出しラッパー。
+# AGENTS.mdの「Gemini API呼び出しは必ずtry/exceptで囲む（429・タイムアウト対応）」を
+# ここに集約実装している。
+# 二重ループ(モデル×リトライ回数)で、
+#   1つのモデルで最大RETRIES_PER_MODEL回試す
+#   → それでも失敗したら次のモデル候補に切り替えて再度試す
+# という「モデルのフォールバック + リトライ」を行う。
+# 全滅した場合のみ502エラーとしてクライアントに返す(アプリ全体はクラッシュさせない)。
 def call_gemini(prompt: str, response_schema):
     client = get_client()
     last_error: Exception | None = None
@@ -33,6 +47,8 @@ def call_gemini(prompt: str, response_schema):
     for model in MODEL_CANDIDATES:
         for attempt in range(RETRIES_PER_MODEL):
             try:
+                # response_schemaを渡すことでGemini側にJSON Schemaに沿った
+                # 構造化出力を強制させ、response.parsedにPydanticオブジェクトとして返させる。
                 response = client.models.generate_content(
                     model=model,
                     contents=prompt,
@@ -56,6 +72,12 @@ def call_gemini(prompt: str, response_schema):
     raise HTTPException(status_code=502, detail=f"AIの呼び出しに失敗しました: {last_error}")
 
 
+# --- Step1: /ai/diagnose ---
+# 目標(goal)と希望期日(desired_deadline)から、ユーザーの現在地を把握するための
+# 診断質問(3〜10問・選択式)をGeminiに生成させる。
+# プロンプト内でAIに「目標分類→必要能力の整理→不足情報の特定→質問作成」という
+# 4ステップの思考手順を踏ませ、後続のpropose-deadline/generate-roadmapに使える
+# 情報を過不足なく引き出す設計になっている。
 @router.post("/diagnose", response_model=schemas.DiagnoseResponse)
 def diagnose(
     req: schemas.DiagnoseRequest,
@@ -121,10 +143,15 @@ Step4:
 
 
     result = call_gemini(prompt, schemas.DiagnoseResponse)
+    # プロンプトで「最大10問」と指示していても念のためコード側でも上限を保証する防御的な一行。
     result.questions = result.questions[:10]
     return result
 
 
+# --- Step2: /ai/propose-deadline ---
+# Step1の質問への回答(answers)をもとに、希望期日が現実的かどうかをAIに評価させ、
+# 現実的な期日(proposed_deadline)・その根拠(reason)・診断結果の要約(diagnosis_summary)を得る。
+# diagnosis_summaryはStep3(generate-roadmap)にそのまま引き継がれる中間成果物。
 @router.post("/propose-deadline", response_model=schemas.ProposeDeadlineResponse)
 def propose_deadline(
     req: schemas.ProposeDeadlineRequest,
@@ -222,6 +249,10 @@ short_reason
     return call_gemini(prompt, schemas.ProposeDeadlineResponse)
 
 
+# --- Step3: /ai/generate-roadmap ---
+# 確定期日(final_deadline)とStep2の診断要約(diagnosis_summary)をもとに、
+# 5〜8個のチェックポイント(SMART原則に沿った具体的なタスク)から成る
+# ロードマップをAIに生成させる。これがquestsテーブル作成後にcheckpointsとして保存される。
 @router.post("/generate-roadmap", response_model=schemas.GenerateRoadmapResponse)
 def generate_roadmap(
     req: schemas.GenerateRoadmapRequest,

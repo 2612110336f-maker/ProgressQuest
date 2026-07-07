@@ -14,6 +14,12 @@ import {
 import QuestLoading from "@/components/QuestLoading";
 import Mascot from "@/components/Mascot";
 
+// --- 新規クエスト作成ページ ---
+// AGENTS.mdのCore AI Flow(diagnose→propose-deadline→generate-roadmap)を
+// そのままステートマシンとして実装したページ。stepの値ひとつで表示を切り替える。
+// choose(AI/手動選択) → [manual: 手動作成で完結] または
+// input(目標入力) → loading-diagnose → questions(質問回答)
+// → loading-propose → deadline(期日確認) → loading-roadmap → roadmap(確認) → creating(保存)
 type Step =
   | "choose"
   | "manual"
@@ -62,6 +68,7 @@ export default function NewQuestPage() {
   // Step 4: generated roadmap
   const [checkpoints, setCheckpoints] = useState<RoadmapCheckpoint[]>([]);
 
+  // 「手動で作る」: AIを介さず、入力内容でそのままQuestを1件作成して詳細画面へ遷移する
   const handleManualSubmit = async () => {
     if (!manualTitle.trim()) {
       setError("タイトルを入力してください");
@@ -84,6 +91,7 @@ export default function NewQuestPage() {
     }
   };
 
+  // Step1(/ai/diagnose)を呼び出し、診断質問一覧を取得してquestionsステップへ進む
   const handleStartDiagnose = async () => {
     if (!goal.trim() || !desiredDeadline) {
       setError("目標と希望期日を入力してください");
@@ -102,6 +110,7 @@ export default function NewQuestPage() {
     }
   };
 
+  // 1問回答するごとに自動で次の質問へ進む(最後の質問では留まる=送信ボタンを表示するため)
   const handleSelectAnswer = (questionId: string, option: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: option }));
     if (currentQuestionIndex < questions.length - 1) {
@@ -109,6 +118,7 @@ export default function NewQuestPage() {
     }
   };
 
+  // Step2(/ai/propose-deadline)を呼び出し、全質問の回答をもとに現実的な期日の提案を受け取る
   const handleSubmitAnswers = async () => {
     if (questions.some((q) => !answers[q.id])) {
       setError("すべての質問に回答してください");
@@ -133,6 +143,7 @@ export default function NewQuestPage() {
     }
   };
 
+  // Step3(/ai/generate-roadmap)を呼び出し、確定した期日でチェックポイント列を生成する
   const handleGenerateRoadmap = async () => {
     if (!finalDeadline) {
       setError("期日を選択してください");
@@ -150,6 +161,9 @@ export default function NewQuestPage() {
     }
   };
 
+  // AI生成フローの最終確定処理。
+  // 1. Questを1件作成 → 2. 生成されたcheckpointsを1件ずつ順番にPOSTして保存
+  // (バックエンドに「複数チェックポイント一括作成」APIが無いため、ループで個別に作成している)
   const handleCreateQuest = async () => {
     setError("");
     setStep("creating");

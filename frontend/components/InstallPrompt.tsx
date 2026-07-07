@@ -1,3 +1,6 @@
+// --- PWA: ホーム画面追加を促すインストールバナー ---
+// ブラウザ標準の`beforeinstallprompt`イベントを横取りしてカスタムUIで表示する。
+// 「今はしない」を押すと7日間(DISMISS_DAYS)は再表示しないようlocalStorageに記録する。
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -30,6 +33,7 @@ export const InstallPrompt = () => {
     }
   };
 
+  // 直近7日以内に「今はしない」を選んでいれば、イベントを購読せず無表示のままにする
   useEffect(() => {
     const dismissedAt = getStoredValue(DISMISS_KEY);
     if (dismissedAt) {
@@ -37,6 +41,8 @@ export const InstallPrompt = () => {
       if (elapsedDays < DISMISS_DAYS) return;
     }
 
+    // preventDefault()でブラウザ標準のミニインフォバーを抑制し、
+    // 発火したイベント自体を保持しておいて後で自前のボタンから呼び出す
     const handler = (event: Event) => {
       event.preventDefault();
       setDeferredEvent(event as BeforeInstallPromptEvent);
@@ -47,6 +53,7 @@ export const InstallPrompt = () => {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
+  // 保持しておいたイベントのprompt()を呼び、ブラウザ標準のインストールダイアログを表示する
   const handleInstall = async () => {
     if (!deferredEvent) return;
     await deferredEvent.prompt();
